@@ -1,0 +1,637 @@
+#!/bin/bash
+set -e
+
+echo "Creating folder structure..."
+mkdir -p lib
+mkdir -p app/\(auth\)
+mkdir -p app/\(tabs\)
+mkdir -p app/article
+mkdir -p app/note
+mkdir -p app/event
+mkdir -p app/sermon
+
+echo "Writing package.json..."
+cat > package.json << 'PKGJSON'
+{
+  "name": "cojc-app",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "2.1.2",
+    "@supabase/supabase-js": "^2.39.0",
+    "expo": "~54.0.0",
+    "expo-av": "~16.0.8",
+    "expo-constants": "~18.0.13",
+    "expo-image-picker": "~17.0.10",
+    "expo-linking": "~8.0.11",
+    "expo-router": "~6.0.23",
+    "expo-status-bar": "~3.0.9",
+    "expo-web-browser": "~15.0.10",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-webview": "13.15.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@types/react": "~19.1.10",
+    "typescript": "^5.3.0"
+  },
+  "private": true
+}
+PKGJSON
+
+echo "Writing app.json..."
+cat > app.json << 'APPJSON'
+{
+  "expo": {
+    "name": "Church of Jesus Christ",
+    "slug": "cojc-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1D9E75"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.cojclds.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1D9E75"
+      },
+      "package": "com.cojclds.app"
+    },
+    "scheme": "cojc-app",
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
+APPJSON
+
+echo "Writing tsconfig.json..."
+cat > tsconfig.json << 'TSJSON'
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./*"]
+    }
+  }
+}
+TSJSON
+
+echo "Writing lib/supabase.ts..."
+cat > lib/supabase.ts << 'SUPABASE'
+import { createClient } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const SUPABASE_URL = 'https://lfpyaefmeynyixdcnkxu.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+});
+SUPABASE
+
+echo "Writing lib/theme.ts..."
+cat > lib/theme.ts << 'THEME'
+export const Colors = {
+  primary: '#1D9E75',
+  primaryDark: '#0F6E56',
+  primaryLight: '#E1F5EE',
+  accent: '#534AB7',
+  accentLight: '#EEEDFE',
+  text: '#1a1a2e',
+  text2: '#6b6b7a',
+  text3: '#9999aa',
+  bg: '#F7F7F5',
+  card: '#FFFFFF',
+  card2: '#F1EFE8',
+  border: 'rgba(0,0,0,0.08)',
+  danger: '#A32D2D',
+  dangerLight: '#FCEBEB',
+  amber: '#BA7517',
+  white: '#FFFFFF',
+};
+export const Radius = { sm: 8, md: 12, lg: 16, xl: 24, full: 999 };
+export const Shadow = {
+  sm: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
+  md: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 4 },
+};
+THEME
+
+echo "Writing lib/types.ts..."
+cat > lib/types.ts << 'TYPES'
+export interface User {
+  id: string; name: string; email: string;
+  profile_image_url?: string; role: 'member' | 'admin'; created_at: string;
+}
+export interface Article {
+  id: string; title: string; subtitle?: string; body?: string; body_html?: string;
+  cover_image_url?: string; author_name?: string; category?: string;
+  read_time_minutes?: number; is_hero?: boolean; is_published: boolean;
+  article_url?: string; external_url?: string; created_at: string;
+}
+export interface Announcement {
+  id: string; title: string; subtitle?: string; content: string;
+  image_url?: string; is_published: boolean; created_at: string;
+}
+export interface Event {
+  id: string; title: string; subtitle?: string; description?: string;
+  location?: string; event_date: string; end_date?: string;
+  image_url?: string; category?: string; is_published: boolean; created_at: string;
+}
+export interface Sermon {
+  id: string; title: string; subtitle?: string; pastor_name: string;
+  pastor_image_url?: string; description?: string; audio_url?: string;
+  thumbnail_url?: string; duration_seconds?: number; series_name?: string;
+  scripture_reference?: string; is_published: boolean; created_at: string;
+}
+export interface Post {
+  id: string; user_id: string; content: string; image_url?: string;
+  likes_count: number; is_hidden: boolean; created_at: string; users?: User;
+}
+export interface Message {
+  id: string; user_id: string; content?: string; image_url?: string;
+  is_deleted: boolean; created_at: string; users?: User;
+}
+export interface Note {
+  id: string; user_id: string; title: string; body: string;
+  sermon_id?: string; scripture_reference?: string; tags?: string[];
+  created_at: string; updated_at: string; sermons?: Sermon;
+}
+TYPES
+
+echo "Writing app/_layout.tsx..."
+cat > app/_layout.tsx << 'LAYOUT'
+import { useEffect, useState } from 'react';
+import { Stack, router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { supabase } from '@/lib/supabase';
+
+export default function RootLayout() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.replace('/(auth)/login');
+      setReady(true);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) router.replace('/(auth)/login');
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+  if (!ready) return null;
+  return (
+    <>
+      <StatusBar style="light" />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="article/[id]" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="sermon/[id]" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="event/[id]" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="note/[id]" options={{ presentation: 'modal' }} />
+      </Stack>
+    </>
+  );
+}
+LAYOUT
+
+echo "Writing app/(auth)/login.tsx..."
+cat > "app/(auth)/login.tsx" << 'LOGIN'
+import { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { router, Link } from 'expo-router';
+import { supabase } from '@/lib/supabase';
+import { Colors, Radius } from '@/lib/theme';
+
+export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogin() {
+    if (!email || !password) return Alert.alert('Missing fields', 'Please enter email and password');
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) Alert.alert('Login failed', error.message);
+    else router.replace('/(tabs)');
+    setLoading(false);
+  }
+
+  return (
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: Colors.bg }}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.header}>
+          <View style={styles.logo}><Text style={styles.logoText}>✝</Text></View>
+          <Text style={styles.title}>Church of Jesus Christ</Text>
+          <Text style={styles.sub}>Sign in to your account</Text>
+        </View>
+        <View style={styles.form}>
+          <Text style={styles.label}>Email address</Text>
+          <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="you@example.com" placeholderTextColor={Colors.text3} keyboardType="email-address" autoCapitalize="none" />
+          <Text style={[styles.label, { marginTop: 14 }]}>Password</Text>
+          <TextInput style={styles.input} value={password} onChangeText={setPassword} placeholder="••••••••" placeholderTextColor={Colors.text3} secureTextEntry />
+          <TouchableOpacity style={[styles.btn, loading && { opacity: 0.6 }]} onPress={handleLogin} disabled={loading}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Sign in</Text>}
+          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 16 }}>
+            <Text style={{ color: Colors.text2, fontSize: 14 }}>Don't have an account? </Text>
+            <Link href="/(auth)/register"><Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '600' }}>Register</Text></Link>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flexGrow: 1, justifyContent: 'center', padding: 24 },
+  header: { alignItems: 'center', marginBottom: 36 },
+  logo: { width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  logoText: { fontSize: 36, color: '#fff' },
+  title: { fontSize: 20, fontWeight: '600', color: Colors.text, marginBottom: 6, textAlign: 'center' },
+  sub: { fontSize: 14, color: Colors.text2 },
+  form: { backgroundColor: Colors.card, borderRadius: Radius.lg, padding: 24, borderWidth: 1, borderColor: Colors.border },
+  label: { fontSize: 12, fontWeight: '600', color: Colors.text2, marginBottom: 6 },
+  input: { backgroundColor: Colors.bg, borderRadius: Radius.sm, padding: 13, fontSize: 15, color: Colors.text, borderWidth: 1, borderColor: Colors.border },
+  btn: { backgroundColor: Colors.primary, borderRadius: Radius.sm, padding: 15, alignItems: 'center', marginTop: 20 },
+  btnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+});
+LOGIN
+
+echo "Writing app/(auth)/register.tsx..."
+cat > "app/(auth)/register.tsx" << 'REGISTER'
+import { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { router, Link } from 'expo-router';
+import { supabase } from '@/lib/supabase';
+import { Colors, Radius } from '@/lib/theme';
+
+export default function RegisterScreen() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleRegister() {
+    if (!name || !email || !password) return Alert.alert('Missing fields', 'Please fill in all fields');
+    if (password.length < 6) return Alert.alert('Weak password', 'Password must be at least 6 characters');
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) { Alert.alert('Registration failed', error.message); setLoading(false); return; }
+    if (data.user) {
+      await supabase.from('users').insert({ id: data.user.id, name: name.trim(), email: email.trim().toLowerCase(), role: 'member' });
+      router.replace('/(tabs)');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: Colors.bg }}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.header}>
+          <View style={styles.logo}><Text style={styles.logoText}>✝</Text></View>
+          <Text style={styles.title}>Create account</Text>
+          <Text style={styles.sub}>Join the Church of Jesus Christ community</Text>
+        </View>
+        <View style={styles.form}>
+          <Text style={styles.label}>Full name</Text>
+          <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Your full name" placeholderTextColor={Colors.text3} autoCapitalize="words" />
+          <Text style={[styles.label, { marginTop: 14 }]}>Email address</Text>
+          <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="you@example.com" placeholderTextColor={Colors.text3} keyboardType="email-address" autoCapitalize="none" />
+          <Text style={[styles.label, { marginTop: 14 }]}>Password</Text>
+          <TextInput style={styles.input} value={password} onChangeText={setPassword} placeholder="At least 6 characters" placeholderTextColor={Colors.text3} secureTextEntry />
+          <TouchableOpacity style={[styles.btn, loading && { opacity: 0.6 }]} onPress={handleRegister} disabled={loading}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Create account</Text>}
+          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 16 }}>
+            <Text style={{ color: Colors.text2, fontSize: 14 }}>Already have an account? </Text>
+            <Link href="/(auth)/login"><Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '600' }}>Sign in</Text></Link>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flexGrow: 1, justifyContent: 'center', padding: 24 },
+  header: { alignItems: 'center', marginBottom: 36 },
+  logo: { width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  logoText: { fontSize: 36, color: '#fff' },
+  title: { fontSize: 20, fontWeight: '600', color: Colors.text, marginBottom: 6 },
+  sub: { fontSize: 14, color: Colors.text2, textAlign: 'center' },
+  form: { backgroundColor: Colors.card, borderRadius: Radius.lg, padding: 24, borderWidth: 1, borderColor: Colors.border },
+  label: { fontSize: 12, fontWeight: '600', color: Colors.text2, marginBottom: 6 },
+  input: { backgroundColor: Colors.bg, borderRadius: Radius.sm, padding: 13, fontSize: 15, color: Colors.text, borderWidth: 1, borderColor: Colors.border },
+  btn: { backgroundColor: Colors.primary, borderRadius: Radius.sm, padding: 15, alignItems: 'center', marginTop: 20 },
+  btnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+});
+REGISTER
+
+echo "Writing app/(tabs)/_layout.tsx..."
+cat > "app/(tabs)/_layout.tsx" << 'TABSLAYOUT'
+import { Tabs } from 'expo-router';
+import { View, Text, StyleSheet } from 'react-native';
+import { Colors } from '@/lib/theme';
+
+function TabIcon({ name, focused }: { name: string; focused: boolean }) {
+  const icons: Record<string, string> = { index: '⌂', community: '◎', notes: '✎', scriptures: '✞', profile: '○' };
+  return <View style={styles.iconWrap}><Text style={[styles.icon, focused && styles.iconActive]}>{icons[name] || '•'}</Text></View>;
+}
+
+export default function TabsLayout() {
+  return (
+    <Tabs screenOptions={{ headerShown: false, tabBarStyle: styles.tabBar, tabBarActiveTintColor: Colors.primary, tabBarInactiveTintColor: Colors.text3, tabBarLabelStyle: styles.label }}>
+      <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: ({ focused }) => <TabIcon name="index" focused={focused} /> }} />
+      <Tabs.Screen name="community" options={{ title: 'Community', tabBarIcon: ({ focused }) => <TabIcon name="community" focused={focused} /> }} />
+      <Tabs.Screen name="notes" options={{ title: 'Notes', tabBarIcon: ({ focused }) => <TabIcon name="notes" focused={focused} /> }} />
+      <Tabs.Screen name="scriptures" options={{ title: 'Scriptures', tabBarIcon: ({ focused }) => <TabIcon name="scriptures" focused={focused} /> }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ focused }) => <TabIcon name="profile" focused={focused} /> }} />
+    </Tabs>
+  );
+}
+
+const styles = StyleSheet.create({
+  tabBar: { backgroundColor: Colors.card, borderTopColor: Colors.border, borderTopWidth: 1, height: 60, paddingBottom: 8, paddingTop: 4 },
+  iconWrap: { alignItems: 'center' },
+  icon: { fontSize: 20, color: Colors.text3 },
+  iconActive: { color: Colors.primary },
+  label: { fontSize: 10, fontWeight: '500' },
+});
+TABSLAYOUT
+
+echo "Writing app/(tabs)/index.tsx..."
+cat > "app/(tabs)/index.tsx" << 'HOMESCREEN'
+import { useEffect, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, RefreshControl, ActivityIndicator } from 'react-native';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { supabase } from '@/lib/supabase';
+import { Colors, Radius, Shadow } from '@/lib/theme';
+import type { Article, Announcement, Event, Sermon } from '@/lib/types';
+
+export default function HomeScreen() {
+  const [hero, setHero] = useState<Article | null>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [sermons, setSermons] = useState<Sermon[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [userName, setUserName] = useState('');
+
+  async function load() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase.from('users').select('name').eq('id', user.id).single();
+      if (profile) setUserName(profile.name.split(' ')[0]);
+    }
+    const [heroRes, annRes, evRes, serRes] = await Promise.all([
+      supabase.from('articles').select('*').eq('is_hero', true).eq('is_published', true).single(),
+      supabase.from('announcements').select('*').eq('is_published', true).order('created_at', { ascending: false }).limit(3),
+      supabase.from('events').select('*').eq('is_published', true).gte('event_date', new Date().toISOString()).order('event_date', { ascending: true }).limit(5),
+      supabase.from('sermons').select('*').eq('is_published', true).order('created_at', { ascending: false }).limit(3),
+    ]);
+    if (heroRes.data) setHero(heroRes.data);
+    if (annRes.data) setAnnouncements(annRes.data);
+    if (evRes.data) setEvents(evRes.data);
+    if (serRes.data) setSermons(serRes.data);
+    setLoading(false); setRefreshing(false);
+  }
+
+  useEffect(() => { load(); }, []);
+
+  const greeting = () => { const h = new Date().getHours(); if (h < 12) return 'Good morning'; if (h < 17) return 'Good afternoon'; return 'Good evening'; };
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' });
+  const eventColor = (cat?: string) => ({ service: '#0F6E56', youth: '#3C3489', outreach: '#712B13', prayer: '#085041', conference: '#72243E' }[cat || ''] || Colors.primary);
+
+  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={Colors.primary} /></View>;
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={Colors.primary} />}>
+        <View style={styles.header}>
+          <View><Text style={styles.greeting}>{greeting()}</Text><Text style={styles.headerName}>{userName ? `Welcome, ${userName}` : 'Church of Jesus Christ'}</Text></View>
+          <View style={styles.avatar}><Text style={styles.avatarText}>{userName?.[0]?.toUpperCase() || 'C'}</Text></View>
+        </View>
+
+        {hero ? (
+          <TouchableOpacity style={styles.hero} onPress={() => router.push(`/article/${hero.id}` as any)} activeOpacity={0.92}>
+            {hero.cover_image_url ? <Image source={{ uri: hero.cover_image_url }} style={styles.heroImg} /> : <View style={styles.heroPlaceholder} />}
+            <View style={styles.heroOverlay} />
+            <View style={styles.heroContent}>
+              {hero.category && <View style={styles.heroCat}><Text style={styles.heroCatText}>{hero.category.toUpperCase()}</Text></View>}
+              <Text style={styles.heroTitle}>{hero.title}</Text>
+              {hero.subtitle && <Text style={styles.heroSub} numberOfLines={2}>{hero.subtitle}</Text>}
+            </View>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.heroBanner}>
+            <Text style={styles.heroBannerTitle}>Welcome to Church of Jesus Christ</Text>
+            <Text style={styles.heroBannerSub}>Grow in faith, community and purpose</Text>
+          </View>
+        )}
+
+        <View style={styles.verse}>
+          <Text style={styles.verseLabel}>✞  Daily verse</Text>
+          <Text style={styles.verseText}>"Trust in the Lord with all your heart and lean not on your own understanding."</Text>
+          <Text style={styles.verseRef}>Proverbs 3:5</Text>
+        </View>
+
+        {announcements.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Announcements</Text>
+            {announcements.map((a) => (
+              <View key={a.id} style={styles.announcementCard}>
+                {a.image_url && <Image source={{ uri: a.image_url }} style={styles.announcementImg} />}
+                <View style={styles.announcementBody}>
+                  <Text style={styles.announcementTitle}>{a.title}</Text>
+                  <Text style={styles.announcementContent} numberOfLines={2}>{a.content}</Text>
+                  <Text style={styles.announcementDate}>{formatDate(a.created_at)}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {events.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Upcoming events</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {events.map((ev) => (
+                <TouchableOpacity key={ev.id} style={styles.eventCard} onPress={() => router.push(`/event/${ev.id}` as any)} activeOpacity={0.88}>
+                  <View style={[styles.eventCardTop, { backgroundColor: eventColor(ev.category) }]}>
+                    <Text style={styles.eventDate}>{formatDate(ev.event_date)}</Text>
+                    <Text style={styles.eventTitle} numberOfLines={2}>{ev.title}</Text>
+                    {ev.location && <Text style={styles.eventLoc} numberOfLines={1}>📍 {ev.location}</Text>}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {sermons.length > 0 && (
+          <View style={[styles.section, { marginBottom: 32 }]}>
+            <Text style={styles.sectionTitle}>Latest sermons</Text>
+            {sermons.map((s) => (
+              <TouchableOpacity key={s.id} style={styles.sermonCard} onPress={() => router.push(`/sermon/${s.id}` as any)} activeOpacity={0.88}>
+                <View style={styles.sermonThumb}>{s.thumbnail_url ? <Image source={{ uri: s.thumbnail_url }} style={styles.sermonThumbImg} /> : <Text style={{ fontSize: 22 }}>🎙</Text>}</View>
+                <View style={styles.sermonInfo}>
+                  <Text style={styles.sermonTitle} numberOfLines={1}>{s.title}</Text>
+                  <Text style={styles.sermonMeta}>{s.pastor_name}{s.duration_seconds ? ` · ${Math.round(s.duration_seconds / 60)} min` : ''}</Text>
+                </View>
+                <View style={styles.playBtn}><Text style={{ color: '#fff', fontSize: 13 }}>▶</Text></View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Colors.bg },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: Colors.card, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  greeting: { fontSize: 11, color: Colors.text3 },
+  headerName: { fontSize: 16, fontWeight: '600', color: Colors.text },
+  avatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { color: '#EEEDFE', fontWeight: '600', fontSize: 15 },
+  hero: { margin: 14, borderRadius: Radius.lg, overflow: 'hidden', height: 230, ...Shadow.md },
+  heroImg: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' },
+  heroPlaceholder: { ...StyleSheet.absoluteFillObject, backgroundColor: Colors.primaryDark },
+  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
+  heroContent: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 18 },
+  heroCat: { backgroundColor: Colors.primary, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, marginBottom: 7 },
+  heroCatText: { color: '#fff', fontSize: 10, fontWeight: '600', letterSpacing: 0.5 },
+  heroTitle: { fontSize: 19, fontWeight: '600', color: '#fff', lineHeight: 26, marginBottom: 5 },
+  heroSub: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
+  heroBanner: { margin: 14, borderRadius: Radius.lg, backgroundColor: Colors.primary, padding: 24, alignItems: 'center' },
+  heroBannerTitle: { fontSize: 18, fontWeight: '600', color: '#fff', textAlign: 'center', marginBottom: 6 },
+  heroBannerSub: { fontSize: 13, color: 'rgba(255,255,255,0.8)', textAlign: 'center' },
+  verse: { marginHorizontal: 14, backgroundColor: '#EEEDFE', borderRadius: Radius.md, padding: 14, borderLeftWidth: 3, borderLeftColor: Colors.accent },
+  verseLabel: { fontSize: 10, fontWeight: '600', color: Colors.accent, marginBottom: 6, letterSpacing: 0.5 },
+  verseText: { fontSize: 14, color: '#3C3489', fontStyle: 'italic', lineHeight: 22, marginBottom: 5 },
+  verseRef: { fontSize: 11, fontWeight: '600', color: Colors.accent },
+  section: { paddingHorizontal: 14, marginTop: 22 },
+  sectionTitle: { fontSize: 15, fontWeight: '600', color: Colors.text, marginBottom: 10 },
+  announcementCard: { backgroundColor: Colors.card, borderRadius: Radius.md, marginBottom: 10, flexDirection: 'row', overflow: 'hidden', borderWidth: 1, borderColor: Colors.border, ...Shadow.sm },
+  announcementImg: { width: 80, height: 90 },
+  announcementBody: { flex: 1, padding: 10 },
+  announcementTitle: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 2 },
+  announcementContent: { fontSize: 12, color: Colors.text2, lineHeight: 17 },
+  announcementDate: { fontSize: 10, color: Colors.text3, marginTop: 5 },
+  eventCard: { width: 165, marginRight: 10, borderRadius: Radius.md, overflow: 'hidden', ...Shadow.sm },
+  eventCardTop: { padding: 12, minHeight: 105 },
+  eventDate: { fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: '500', marginBottom: 5 },
+  eventTitle: { fontSize: 13, fontWeight: '600', color: '#fff', lineHeight: 18 },
+  eventLoc: { fontSize: 10, color: 'rgba(255,255,255,0.7)', marginTop: 5 },
+  sermonCard: { backgroundColor: Colors.card, borderRadius: Radius.md, padding: 11, marginBottom: 9, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: Colors.border, ...Shadow.sm },
+  sermonThumb: { width: 50, height: 50, borderRadius: 10, backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  sermonThumbImg: { width: 50, height: 50, borderRadius: 10 },
+  sermonInfo: { flex: 1 },
+  sermonTitle: { fontSize: 13, fontWeight: '600', color: Colors.text },
+  sermonMeta: { fontSize: 11, color: Colors.text3, marginTop: 2 },
+  playBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
+});
+HOMESCREEN
+
+echo "Writing remaining tab screens as placeholders (community, notes, scriptures, profile)..."
+
+cat > "app/(tabs)/community.tsx" << 'COMMUNITY'
+import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '@/lib/theme';
+export default function CommunityScreen() {
+  return <SafeAreaView style={styles.safe} edges={['top']}><View style={styles.center}><Text style={styles.text}>Community coming soon</Text></View></SafeAreaView>;
+}
+const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: Colors.bg }, center: { flex: 1, alignItems: 'center', justifyContent: 'center' }, text: { fontSize: 16, color: Colors.text2 } });
+COMMUNITY
+
+cat > "app/(tabs)/notes.tsx" << 'NOTES'
+import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '@/lib/theme';
+export default function NotesScreen() {
+  return <SafeAreaView style={styles.safe} edges={['top']}><View style={styles.center}><Text style={styles.text}>Notes coming soon</Text></View></SafeAreaView>;
+}
+const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: Colors.bg }, center: { flex: 1, alignItems: 'center', justifyContent: 'center' }, text: { fontSize: 16, color: Colors.text2 } });
+NOTES
+
+cat > "app/(tabs)/scriptures.tsx" << 'SCRIPTURES'
+import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '@/lib/theme';
+export default function ScripturesScreen() {
+  return <SafeAreaView style={styles.safe} edges={['top']}><View style={styles.center}><Text style={styles.text}>Scriptures coming soon</Text></View></SafeAreaView>;
+}
+const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: Colors.bg }, center: { flex: 1, alignItems: 'center', justifyContent: 'center' }, text: { fontSize: 16, color: Colors.text2 } });
+SCRIPTURES
+
+cat > "app/(tabs)/profile.tsx" << 'PROFILE'
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { supabase } from '@/lib/supabase';
+import { Colors } from '@/lib/theme';
+export default function ProfileScreen() {
+  return <SafeAreaView style={styles.safe} edges={['top']}><View style={styles.center}><Text style={styles.text}>Profile coming soon</Text><TouchableOpacity style={styles.btn} onPress={async () => { await supabase.auth.signOut(); router.replace('/(auth)/login'); }}><Text style={styles.btnText}>Sign out</Text></TouchableOpacity></View></SafeAreaView>;
+}
+const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: Colors.bg }, center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }, text: { fontSize: 16, color: Colors.text2 }, btn: { backgroundColor: Colors.danger, borderRadius: 8, paddingHorizontal: 24, paddingVertical: 10 }, btnText: { color: '#fff', fontWeight: '600' } });
+PROFILE
+
+cat > "app/note/[id].tsx" << 'NOTEID'
+import { View, Text } from 'react-native';
+export default function NoteDetail() { return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text>Note detail</Text></View>; }
+NOTEID
+
+cat > "app/article/[id].tsx" << 'ARTICLEID'
+import { View, Text } from 'react-native';
+export default function ArticleDetail() { return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text>Article detail</Text></View>; }
+ARTICLEID
+
+cat > "app/event/[id].tsx" << 'EVENTID'
+import { View, Text } from 'react-native';
+export default function EventDetail() { return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text>Event detail</Text></View>; }
+EVENTID
+
+cat > "app/sermon/[id].tsx" << 'SERMONID'
+import { View, Text } from 'react-native';
+export default function SermonDetail() { return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Text>Sermon detail</Text></View>; }
+SERMONID
+
+echo "Removing old App.tsx and index.ts if they exist..."
+rm -f App.tsx index.ts
+
+echo "Installing packages..."
+npm install --legacy-peer-deps
+
+echo ""
+echo "✅ Setup complete! Now run: npx expo start --tunnel"
+

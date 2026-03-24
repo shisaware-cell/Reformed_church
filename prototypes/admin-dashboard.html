@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Church of Jesus Christ of Latter-Day Saints — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F7F7F5;color:#1a1a2e;min-height:100vh}
+:root{--t:#592569;--p:#534AB7;--card:#fff;--border:rgba(0,0,0,0.09);--text2:#6b6b7a;--text3:#9999aa;--danger:#A32D2D;--dangerbg:#FCEBEB}
+#setup{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.setup-card{background:var(--card);border-radius:16px;border:1px solid var(--border);padding:32px;width:100%;max-width:440px}
+.setup-card h1{font-size:20px;font-weight:500;margin-bottom:6px}
+.setup-card p{font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.6}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
+.field input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:#F7F7F5}
+.field input:focus{border-color:var(--t)}
+.btn-primary{width:100%;padding:11px;background:var(--t);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;margin-top:6px}
+.hint{font-size:11px;color:var(--text3);margin-top:8px;text-align:center}
+#app{display:none;min-height:100vh}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100}
+.sidebar-logo{padding:20px 16px 14px;border-bottom:1px solid var(--border)}
+.brand-icon{object-fit:contain;background:#fff;display:block}
+.sidebar-logo span{font-size:11px;font-weight:500;color:var(--t);line-height:1.4}
+.sidebar-logo small{display:block;font-size:11px;color:var(--text3);margin-top:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:13px;color:var(--text2);cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:#F7F7F5;color:#1a1a2e}
+.nav-item.active{background:#F3E8F7;color:#592569;font-weight:500}
+.nav-item .ico{font-size:16px;width:20px;text-align:center}
+.sidebar-bottom{margin-top:auto;padding:14px 16px;border-top:1px solid var(--border)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--p);color:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.user-row{display:flex;align-items:center;gap:8px}
+.user-info{flex:1;min-width:0}
+.user-info p{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-info small{font-size:10px;color:var(--text3)}
+.logout-btn{background:none;border:none;font-size:11px;color:var(--danger);cursor:pointer;padding:4px 0;width:100%;text-align:left;margin-top:8px}
+.main{margin-left:220px;padding:28px 32px;min-height:100vh}
+.page{display:none}.page.active{display:block}
+.page-header{margin-bottom:24px}
+.page-header h2{font-size:20px;font-weight:500}
+.page-header p{font-size:13px;color:var(--text2);margin-top:3px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.stat-card{background:var(--card);border-radius:12px;padding:16px;border:1px solid var(--border)}
+.stat-card .num{font-size:26px;font-weight:500;color:var(--t)}
+.stat-card .lbl{font-size:12px;color:var(--text3);margin-top:2px}
+.stat-card .view-link{display:none;font-size:11px;color:var(--t);margin-top:8px;font-weight:500}
+.content-list{background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden}
+.list-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.list-header h3{font-size:14px;font-weight:500}
+.add-btn{padding:7px 14px;background:var(--t);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer}
+.list-item{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--border)}
+.list-item:last-child{border-bottom:none}
+.item-thumb{width:44px;height:44px;border-radius:8px;background:#F3E8F7;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden}
+.item-thumb img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+.item-info{flex:1;min-width:0}
+.item-info p{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-info small{font-size:11px;color:var(--text3)}
+.badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500}
+.badge.pub{background:#F3E8F7;color:#592569}
+.badge.draft{background:#F1EFE8;color:var(--text2)}
+/* RSVP badge */
+.rsvp-badge{display:inline-flex;align-items:center;gap:4px;background:#EEF0FF;color:#534AB7;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.rsvp-badge .rsvp-ico{font-size:12px}
+.item-actions{display:flex;gap:8px;align-items:center}
+.edit-btn{font-size:11px;color:var(--t);cursor:pointer;background:none;border:none;padding:4px 8px;border-radius:6px}
+.edit-btn:hover{background:#F3E8F7}
+.del-btn{font-size:11px;color:var(--danger);cursor:pointer;background:none;border:none;padding:4px 8px;border-radius:6px}
+.del-btn:hover{background:var(--dangerbg)}
+.rsvp-btn{font-size:11px;color:#534AB7;cursor:pointer;background:none;border:none;padding:4px 8px;border-radius:6px}
+.rsvp-btn:hover{background:#EEF0FF}
+.empty{padding:40px;text-align:center;color:var(--text3);font-size:13px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--card);z-index:1}
+.modal-head h3{font-size:15px;font-weight:500}
+.close-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1}
+.modal-body{padding:20px}
+.form-row{margin-bottom:16px}
+.form-row label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
+.form-row input,.form-row textarea,.form-row select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;font-family:inherit;background:#F7F7F5;color:#1a1a2e}
+.form-row input:focus,.form-row textarea:focus,.form-row select:focus{border-color:var(--t)}
+.form-row textarea{resize:vertical;min-height:90px;line-height:1.6}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.upload-zone{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:.2s}
+.upload-zone:hover{border-color:var(--t);background:#59256911}
+.upload-zone p{font-size:13px;color:var(--text2);margin-top:6px}
+.upload-zone small{font-size:11px;color:var(--text3)}
+.preview-img{width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-top:8px;display:none}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--card)}
+.btn-cancel{padding:9px 18px;background:none;border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;color:var(--text2)}
+.btn-save{padding:9px 20px;background:var(--t);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-save:disabled{opacity:.5;cursor:not-allowed}
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:.3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.error{background:var(--danger)}
+#login{display:none;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:#F7F7F5}
+.login-card{background:var(--card);border-radius:16px;border:1px solid var(--border);padding:32px;width:100%;max-width:400px}
+.login-card .logo{font-size:22px;font-weight:500;color:var(--t);margin-bottom:4px}
+.login-card .sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+.upload-progress{height:4px;background:#F3E8F7;border-radius:2px;margin-top:8px;display:none}
+.upload-progress-bar{height:100%;background:var(--t);border-radius:2px;transition:width .3s}
+.rte-toolbar{background:#F7F7F5;border-bottom:1px solid var(--border);padding:6px 8px;display:flex;flex-wrap:wrap;gap:4px}
+.rte-toolbar button{background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;color:#1a1a2e}
+.rte-toolbar button:hover{background:#F3E8F7}
+.rte-body{min-height:200px;padding:14px;font-size:14px;line-height:1.7;outline:none;color:#1a1a2e}
+.rte-body a{color:var(--t)}
+.rte-body img{max-width:100%;border-radius:8px;margin:8px 0}
+.rte-body blockquote{border-left:3px solid var(--t);padding-left:12px;color:var(--text2);margin:8px 0}
+/* RSVP modal specific styles */
+#rsvp-modal{max-width:480px}
+.rsvp-summary{display:flex;align-items:center;gap:12px;background:#EEF0FF;border-radius:10px;padding:14px 16px;margin-bottom:18px}
+.rsvp-summary .big-num{font-size:36px;font-weight:600;color:#534AB7;line-height:1}
+.rsvp-summary .big-lbl{font-size:13px;color:#534AB7;font-weight:500}
+.rsvp-summary .big-sub{font-size:11px;color:#7B72D0;margin-top:2px}
+.rsvp-person{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.rsvp-person:last-child{border-bottom:none}
+.rsvp-person .pa{width:32px;height:32px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.rsvp-person .pn{font-size:13px;font-weight:500}
+.rsvp-person .pe{font-size:11px;color:var(--text3)}
+.rsvp-person .pt{font-size:10px;color:var(--text3);margin-left:auto;white-space:nowrap}
+.rsvp-empty{text-align:center;padding:30px 0;color:var(--text3);font-size:13px}
+
+/* Dashboard quick actions */
+.quick-actions{display:grid;grid-template-columns:1fr 1fr 1fr}
+.quick-action-card{padding:18px 20px;cursor:pointer}
+.quick-action-card.with-divider{border-right:1px solid var(--border)}
+
+/* Responsive layout */
+@media (max-width: 1100px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+@media (max-width: 900px){
+  .sidebar{position:static;width:100%;height:auto;border-right:none;border-bottom:1px solid var(--border)}
+  .sidebar-logo{padding:14px 14px 10px}
+  .sidebar nav{display:flex;gap:6px;overflow-x:auto;padding:10px 12px;flex:unset}
+  .nav-item{flex:0 0 auto;border:1px solid var(--border);border-radius:10px;padding:9px 12px;white-space:nowrap}
+  .sidebar-bottom{display:flex;align-items:center;justify-content:space-between;padding:10px 12px}
+  .logout-btn{width:auto;margin-top:0;padding:6px 10px;border:1px solid var(--dangerbg);border-radius:8px}
+  .main{margin-left:0;padding:18px 14px}
+  .page-header{margin-bottom:18px}
+  .stat-card.mobile-nav{cursor:pointer}
+  .stat-card.mobile-nav:active{background:#F7F7F5}
+  .stat-card.mobile-nav .view-link{display:block}
+  .list-header{padding:12px 14px;gap:10px;align-items:flex-start;flex-wrap:wrap}
+  .list-item{padding:10px 12px;gap:10px;flex-wrap:wrap}
+  .item-info{min-width:170px}
+  .item-actions{width:100%;justify-content:flex-end}
+  .quick-actions{grid-template-columns:1fr}
+  .quick-action-card.with-divider{border-right:none;border-bottom:1px solid var(--border)}
+}
+
+@media (max-width: 640px){
+  .stats-grid{grid-template-columns:1fr;gap:10px}
+  .two-col{grid-template-columns:1fr}
+  .modal-overlay{padding:10px}
+  .modal{max-height:95vh;border-radius:12px}
+  .modal-head,.modal-body,.modal-foot{padding-left:14px;padding-right:14px}
+  .rsvp-summary .big-num{font-size:30px}
+  .rsvp-person .pt{font-size:10px}
+}
+</style>
+</head>
+<body>
+
+<div id="setup">
+  <div class="setup-card">
+    <h1>Connect to Supabase</h1>
+    <p>Enter your Supabase project details below. You only need to do this once — they will be saved in your browser.</p>
+    <div class="field"><label>Supabase project URL</label><input id="sb-url" placeholder="https://xxxxxxxxxxxx.supabase.co" type="url"/></div>
+    <div class="field"><label>Supabase anon key</label><input id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." type="text"/></div>
+    <button class="btn-primary" onclick="saveConfig()">Save and continue</button>
+    <p class="hint">Find these in Supabase → Settings → API</p>
+  </div>
+</div>
+
+<div id="login">
+  <div class="login-card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><img src="icon.png" class="brand-icon" style="width:38px;height:38px;border-radius:9px;flex-shrink:0"/><div class="logo" style="margin-bottom:0;font-size:15px;line-height:1.3">Church of Jesus Christ of Latter-Day Saints</div></div>
+    <div class="sub">Admin Dashboard — sign in to continue</div>
+    <div class="field"><label>Email address</label><input id="login-email" type="email" placeholder="admin@church.com"/></div>
+    <div class="field"><label>Password</label><input id="login-pass" type="password" placeholder="••••••••"/></div>
+    <button class="btn-primary" onclick="doLogin()">Sign in</button>
+    <p class="hint" style="margin-top:12px"><span style="cursor:pointer;color:var(--text2)" onclick="resetConfig()">← Change Supabase settings</span></p>
+  </div>
+</div>
+
+<div id="app">
+  <div class="sidebar">
+    <div class="sidebar-logo"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><img src="icon.png" class="brand-icon" style="width:30px;height:30px;border-radius:7px;flex-shrink:0"/><span>Church of Jesus Christ of Latter-Day Saints</span></div><small>Admin Dashboard</small></div>
+    <nav style="padding:8px 0;flex:1">
+      <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="ico">⊞</span> Dashboard</button>
+      <button class="nav-item" onclick="showPage('announcements',this)"><span class="ico">📢</span> Announcements</button>
+      <button class="nav-item" onclick="showPage('events',this)"><span class="ico">📅</span> Events</button>
+      <button class="nav-item" onclick="showPage('articles',this)"><span class="ico">📝</span> Articles</button>
+      <button class="nav-item" onclick="showPage('community',this)"><span class="ico">💬</span> Community</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-row">
+        <div class="avatar" id="user-avatar">A</div>
+        <div class="user-info"><p id="user-name">Admin</p><small id="user-email"></small></div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page active" id="page-dashboard">
+      <div class="page-header"><h2>Dashboard</h2><p>Welcome back. Here is a summary of your church content.</p></div>
+      <div class="stats-grid">
+        <div class="stat-card mobile-nav" onclick="openMobileListFromStat('announcements')"><div class="num" id="stat-ann">—</div><div class="lbl">Announcements</div><div class="view-link">View list →</div></div>
+        <div class="stat-card mobile-nav" onclick="openMobileListFromStat('events')"><div class="num" id="stat-ev">—</div><div class="lbl">Events</div><div class="view-link">View list →</div></div>
+        <div class="stat-card mobile-nav" onclick="openMobileListFromStat('articles')"><div class="num" id="stat-art">—</div><div class="lbl">Articles</div><div class="view-link">View list →</div></div>
+      </div>
+      <div class="content-list">
+        <div class="list-header"><h3>Quick actions</h3></div>
+        <div class="quick-actions">
+          <div class="quick-action-card with-divider" onclick="openModal('announcements',null)"><div style="font-size:24px;margin-bottom:6px">📢</div><p style="font-size:13px;font-weight:500">New announcement</p><p style="font-size:11px;color:var(--text3);margin-top:2px">Post a notice to all members</p></div>
+          <div class="quick-action-card with-divider" onclick="openModal('events',null)"><div style="font-size:24px;margin-bottom:6px">📅</div><p style="font-size:13px;font-weight:500">New event</p><p style="font-size:11px;color:var(--text3);margin-top:2px">Add an upcoming church event</p></div>
+          <div class="quick-action-card" onclick="openModal('articles',null)"><div style="font-size:24px;margin-bottom:6px">📝</div><p style="font-size:13px;font-weight:500">New article</p><p style="font-size:11px;color:var(--text3);margin-top:2px">Write and publish an article</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-announcements">
+      <div class="page-header"><h2>Announcements</h2><p>Post notices and updates visible on the app home screen.</p></div>
+      <div class="content-list"><div class="list-header"><h3>All announcements</h3><button class="add-btn" onclick="openModal('announcements',null)">+ New announcement</button></div><div id="list-announcements"><div class="empty">Loading...</div></div></div>
+    </div>
+    <div class="page" id="page-events">
+      <div class="page-header"><h2>Events</h2><p>Manage upcoming church events and gatherings.</p></div>
+      <div class="content-list"><div class="list-header"><h3>All events</h3><button class="add-btn" onclick="openModal('events',null)">+ New event</button></div><div id="list-events"><div class="empty">Loading...</div></div></div>
+    </div>
+    <div class="page" id="page-articles">
+      <div class="page-header"><h2>Articles</h2><p>Write devotionals, testimonies, and teaching articles.</p></div>
+      <div class="content-list"><div class="list-header"><h3>All articles</h3><button class="add-btn" onclick="openModal('articles',null)">+ New article</button></div><div id="list-articles"><div class="empty">Loading...</div></div></div>
+    </div>
+    <div class="page" id="page-community">
+      <div class="page-header"><h2>Community moderation</h2><p>Review and remove inappropriate posts.</p></div>
+      <div class="content-list"><div class="list-header"><h3>Recent posts</h3></div><div id="list-community"><div class="empty">Loading...</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Main edit/create modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modal-title">New item</h3><button class="close-btn" onclick="closeModal()">×</button></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" id="btn-save" onclick="submitForm()">Save and publish</button></div>
+  </div>
+</div>
+
+<!-- RSVP list modal -->
+<div class="modal-overlay" id="rsvp-modal-overlay">
+  <div class="modal" id="rsvp-modal">
+    <div class="modal-head">
+      <h3 id="rsvp-modal-title">RSVPs</h3>
+      <button class="close-btn" onclick="closeRsvpModal()">×</button>
+    </div>
+    <div class="modal-body" id="rsvp-modal-body">
+      <div class="empty">Loading...</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeRsvpModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var SB=null, CU=null, CM=null, EID=null;
+var rowCache = {};
+var UK='gc_sb_url', KK='gc_sb_key';
+
+function saveConfig(){
+  var u=document.getElementById('sb-url').value.trim();
+  var k=document.getElementById('sb-key').value.trim();
+  if(!u||!k)return showToast('Please enter both URL and anon key',true);
+  localStorage.setItem(UK,u); localStorage.setItem(KK,k);
+  SB=window.supabase.createClient(u,k);
+  showLogin();
+}
+function resetConfig(){
+  localStorage.removeItem(UK); localStorage.removeItem(KK);
+  document.getElementById('setup').style.display='flex';
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='none';
+}
+function showLogin(){
+  document.getElementById('setup').style.display='none';
+  document.getElementById('login').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+function showApp(user){
+  CU=user;
+  document.getElementById('setup').style.display='none';
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('user-name').textContent=user.email.split('@')[0];
+  document.getElementById('user-email').textContent=user.email;
+  document.getElementById('user-avatar').textContent=user.email[0].toUpperCase();
+  loadStats();
+}
+async function doLogin(){
+  var em=document.getElementById('login-email').value.trim();
+  var pw=document.getElementById('login-pass').value;
+  if(!em||!pw)return showToast('Please enter email and password',true);
+  var res=await SB.auth.signInWithPassword({email:em,password:pw});
+  if(res.error)return showToast(res.error.message,true);
+  showApp(res.data.user);
+}
+async function doLogout(){
+  await SB.auth.signOut(); showLogin();
+}
+
+async function loadStats(){
+  var tables=['announcements','events','articles'];
+  var ids=['stat-ann','stat-ev','stat-art'];
+  for(var i=0;i<tables.length;i++){
+    var r=await SB.from(tables[i]).select('*',{count:'exact',head:true});
+    document.getElementById(ids[i]).textContent=r.count||0;
+  }
+}
+
+/* ── RSVP helpers ── */
+async function fetchRsvpCounts(eventIds){
+  if(!eventIds||eventIds.length===0) return {};
+  var res=await SB.from('event_rsvps').select('event_id').in('event_id',eventIds);
+  if(res.error||!res.data) return {};
+  var counts={};
+  res.data.forEach(function(r){ counts[r.event_id]=(counts[r.event_id]||0)+1; });
+  return counts;
+}
+
+async function openRsvpModal(eventId, eventTitle){
+  document.getElementById('rsvp-modal-title').textContent='RSVPs — '+eventTitle;
+  document.getElementById('rsvp-modal-body').innerHTML='<div class="empty">Loading...</div>';
+  document.getElementById('rsvp-modal-overlay').classList.add('open');
+
+  // Step 1: fetch RSVPs
+  var rsvpRes=await SB.from('event_rsvps').select('user_id,status,created_at').eq('event_id',eventId).order('created_at',{ascending:false});
+  if(rsvpRes.error){ document.getElementById('rsvp-modal-body').innerHTML='<div class="empty">Could not load RSVPs: '+rsvpRes.error.message+'</div>'; return; }
+
+  var rsvps=rsvpRes.data||[];
+  var count=rsvps.length;
+  var usersMap={};
+
+  // Step 2: fetch user profiles for all RSVP'd user IDs
+  if(count>0){
+    var uids=rsvps.map(function(r){return r.user_id;}).filter(Boolean);
+    var uRes=await SB.from('users').select('id,name,email').in('id',uids);
+    if(uRes.data) uRes.data.forEach(function(u){ usersMap[u.id]=u; });
+  }
+
+  var html='<div class="rsvp-summary">'
+    +'<div class="big-num">'+count+'</div>'
+    +'<div><div class="big-lbl">People have RSVP\'d</div><div class="big-sub">for this event</div></div>'
+    +'</div>';
+
+  if(count===0){
+    html+='<div class="rsvp-empty">No one has RSVP\'d for this event yet.</div>';
+  } else {
+    html+='<div style="margin-top:4px">';
+    rsvps.forEach(function(r){
+      var u=usersMap[r.user_id]||{};
+      var name=u.name||(u.email?u.email.split('@')[0]:'Unknown member');
+      var email=u.email||'';
+      var initial=(name[0]||'?').toUpperCase();
+      var ts=r.created_at?new Date(r.created_at).toLocaleDateString('en-ZA',{day:'numeric',month:'short'}):'';
+      html+='<div class="rsvp-person">'
+        +'<div class="pa">'+initial+'</div>'
+        +'<div><div class="pn">'+esc(name)+'</div>'
+        +(email?'<div class="pe">'+esc(email)+'</div>':'')
+        +'</div>'
+        +(ts?'<div class="pt">'+ts+'</div>':'')
+        +'</div>';
+    });
+    html+='</div>';
+  }
+  document.getElementById('rsvp-modal-body').innerHTML=html;
+}
+
+function closeRsvpModal(){
+  document.getElementById('rsvp-modal-overlay').classList.remove('open');
+}
+
+/* ── List loading ── */
+async function loadList(type){
+  var el=document.getElementById('list-'+type);
+  if(!el)return;
+  el.innerHTML='<div class="empty">Loading...</div>';
+  var res;
+  if(type==='announcements') res=await SB.from('announcements').select('*').order('created_at',{ascending:false});
+  else if(type==='events')   res=await SB.from('events').select('*').order('event_date',{ascending:true});
+  else if(type==='articles') res=await SB.from('articles').select('*').order('created_at',{ascending:false});
+  else if(type==='sermons')  res=await SB.from('sermons').select('*').order('created_at',{ascending:false});
+  else if(type==='community')res=await SB.from('posts').select('*,users(name,email)').order('created_at',{ascending:false}).limit(30);
+  else return;
+  if(res.error){el.innerHTML='<div class="empty">Error: '+res.error.message+'</div>';return;}
+  if(!res.data||res.data.length===0){el.innerHTML='<div class="empty">Nothing here yet. Add your first item above.</div>';return;}
+
+  // For events, pre-fetch all RSVP counts in one query
+  var rsvpCounts={};
+  if(type==='events'){
+    var ids=res.data.map(function(d){return d.id;});
+    rsvpCounts=await fetchRsvpCounts(ids);
+  }
+
+  var html='';
+  for(var i=0;i<res.data.length;i++){
+    var item=res.data[i];
+    var cacheKey=type+'__'+item.id;
+    rowCache[cacheKey]=item;
+    html+=buildRow(type,item,cacheKey,rsvpCounts);
+  }
+  el.innerHTML=html;
+}
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function buildRow(type,d,cacheKey,rsvpCounts){
+  var thumb,title,sub;
+  var pub=d.is_published!==false;
+  var badge=pub?'<span class="badge pub">Published</span>':'<span class="badge draft">Draft</span>';
+  rsvpCounts=rsvpCounts||{};
+
+  if(type==='announcements'){
+    thumb=d.image_url?'<img src="'+esc(d.image_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>':'📢';
+    title=d.title; sub=(d.subtitle||d.content||'').slice(0,60);
+  } else if(type==='events'){
+    thumb=d.image_url?'<img src="'+esc(d.image_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>':'📅';
+    title=d.title;
+    sub=(d.event_date?new Date(d.event_date).toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short'}):'')+( d.location?' · '+d.location:'');
+    var rsvpCount=rsvpCounts[d.id]||0;
+    var rsvpBadge='<span class="rsvp-badge"><span class="rsvp-ico">👥</span>'+rsvpCount+' RSVP'+(rsvpCount!==1?'s':'')+'</span>';
+    return '<div class="list-item">'
+      +'<div class="item-thumb">'+thumb+'</div>'
+      +'<div class="item-info"><p>'+esc(title)+'</p><small>'+esc(sub)+'</small></div>'
+      +rsvpBadge
+      +badge
+      +'<div class="item-actions">'
+      +'<button class="rsvp-btn" onclick="openRsvpModal(\''+d.id+'\',\''+esc(d.title)+'\')" title="View RSVPs">👥 View RSVPs</button>'
+      +'<button class="edit-btn" onclick="openModal(\'events\',rowCache[\''+cacheKey+'\'])">Edit</button>'
+      +'<button class="del-btn" onclick="delItem(\'events\',\''+d.id+'\',\'events\')">Delete</button>'
+      +'</div></div>';
+  } else if(type==='articles'){
+    thumb=d.cover_image_url?'<img src="'+esc(d.cover_image_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>':'📝';
+    title=d.title;
+    sub=(d.author_name||'')+(d.category?' · '+d.category:'')+(d.is_hero?' · ⭐ Hero':'');
+    return '<div class="list-item">'
+      +'<div class="item-thumb">'+thumb+'</div>'
+      +'<div class="item-info"><p>'+esc(title)+'</p><small>'+esc(sub)+'</small></div>'
+      +badge
+      +'<div class="item-actions">'
+      +'<button class="edit-btn" style="color:#185FA5" onclick="copyArticleLink(\''+d.id+'\',this)" title="Copy shareable link">🔗 Link</button>'
+      +'<button class="edit-btn" onclick="openModal(\'articles\',rowCache[\''+cacheKey+'\'])">Edit</button>'
+      +'<button class="del-btn" onclick="delItem(\'articles\',\''+d.id+'\',\'articles\')">Delete</button>'
+      +'</div></div>';
+  } else if(type==='sermons'){
+    thumb=d.thumbnail_url?'<img src="'+esc(d.thumbnail_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>':'🎙';
+    title=d.title; sub=(d.pastor_name||'')+(d.series_name?' · '+d.series_name:'');
+  } else if(type==='community'){
+    var uname=(d.users&&d.users.name)?d.users.name:(d.users&&d.users.email)?d.users.email:'Member';
+    return '<div class="list-item"><div class="item-thumb">💬</div><div class="item-info"><p>'+esc(uname)+'</p><small>'+esc((d.content||'').slice(0,70))+'...</small></div><div class="item-actions"><button class="del-btn" onclick="delItem(\'posts\',\''+d.id+'\',\'community\')">Remove</button></div></div>';
+  }
+  return '<div class="list-item">'
+    +'<div class="item-thumb">'+thumb+'</div>'
+    +'<div class="item-info"><p>'+esc(title)+'</p><small>'+esc(sub)+'</small></div>'
+    +badge
+    +'<div class="item-actions">'
+    +'<button class="edit-btn" onclick="openModal(\''+type+'\',rowCache[\''+cacheKey+'\'])">Edit</button>'
+    +'<button class="del-btn" onclick="delItem(\''+type+'\',\''+d.id+'\',\''+type+'\')">Delete</button>'
+    +'</div></div>';
+}
+
+var MT={announcements:'New announcement',events:'New event',articles:'New article',sermons:'New sermon'};
+
+function openModal(type,data){
+  CM=type;
+  EID=data?data.id:null;
+  document.getElementById('modal-title').textContent=data?('Edit '+type.slice(0,-1)):(MT[type]||'New item');
+  document.getElementById('modal-body').innerHTML=buildForm(type,data||{});
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  CM=null; EID=null;
+}
+
+function imgField(url,id){
+  return '<div class="upload-zone" onclick="document.getElementById(\''+id+'-file\').click()">'
+    +'<div style="font-size:28px">📷</div><p>Click to upload image</p><small>JPG PNG up to 5MB</small>'
+    +'<input type="file" id="'+id+'-file" accept="image/*" style="display:none" onchange="prevImg(this,\''+id+'-preview\',\''+id+'-url\')"/>'
+    +'<div class="upload-progress" id="'+id+'-prog"><div class="upload-progress-bar" id="'+id+'-bar"></div></div>'
+    +'</div>'
+    +(url?'<img src="'+esc(url)+'" class="preview-img" id="'+id+'-preview" style="display:block"/>':'<img class="preview-img" id="'+id+'-preview"/>')
+    +'<input type="hidden" id="'+id+'-url" value="'+esc(url||'')+'"/>';
+}
+
+function buildForm(type,d){
+  var pub=d.is_published!==false;
+  var sf='<div class="form-row"><label>Status</label><select id="f-pub"><option value="true" '+(pub?'selected':'')+'>Published — visible in app</option><option value="false" '+(!pub?'selected':'')+'>Draft — hidden from app</option></select></div>';
+
+  if(type==='announcements'){
+    return '<div class="form-row"><label>Title *</label><input id="f-title" value="'+esc(d.title||'')+'"/></div>'
+      +'<div class="form-row"><label>Subtitle</label><input id="f-subtitle" value="'+esc(d.subtitle||'')+'"/></div>'
+      +'<div class="form-row"><label>Body / message *</label><textarea id="f-content">'+esc(d.content||'')+'</textarea></div>'
+      +'<div class="form-row"><label>Cover image</label>'+imgField(d.image_url,'f-img')+'</div>'
+      +sf;
+  }
+  if(type==='events'){
+    var cats=['service','youth','outreach','prayer','conference'];
+    var catOpts=cats.map(function(c){return '<option value="'+c+'" '+(d.category===c?'selected':'')+'>'+c[0].toUpperCase()+c.slice(1)+'</option>';}).join('');
+    return '<div class="form-row"><label>Event title *</label><input id="f-title" value="'+esc(d.title||'')+'"/></div>'
+      +'<div class="form-row"><label>Subtitle</label><input id="f-subtitle" value="'+esc(d.subtitle||'')+'"/></div>'
+      +'<div class="form-row"><label>Description</label><textarea id="f-desc">'+esc(d.description||'')+'</textarea></div>'
+      +'<div class="two-col">'
+        +'<div class="form-row"><label>Date and time *</label><input type="datetime-local" id="f-date" value="'+(d.event_date?d.event_date.slice(0,16):'')+'"/></div>'
+        +'<div class="form-row"><label>End date and time</label><input type="datetime-local" id="f-enddate" value="'+(d.end_date?d.end_date.slice(0,16):'')+'"/></div>'
+      +'</div>'
+      +'<div class="form-row"><label>Location</label><input id="f-loc" value="'+esc(d.location||'')+'"/></div>'
+      +'<div class="form-row"><label>Category</label><select id="f-cat">'+catOpts+'</select></div>'
+      +'<div class="form-row"><label>Event poster</label>'+imgField(d.image_url,'f-img')+'</div>'
+      +sf;
+  }
+  if(type==='articles'){
+    var acats=['general','devotional','testimony','teaching'];
+    var acatOpts=acats.map(function(c){return '<option value="'+c+'" '+(d.category===c?'selected':'')+'>'+c[0].toUpperCase()+c.slice(1)+'</option>';}).join('');
+    var heroChecked=d.is_hero?'checked':'';
+    var existingBody=d.body_html||d.body||'';
+    return '<div class="form-row"><label>Article title *</label><input id="f-title" value="'+esc(d.title||'')+'"/></div>'
+      +'<div class="form-row"><label>Subtitle / tagline</label><input id="f-subtitle" value="'+esc(d.subtitle||'')+'"/></div>'
+      +'<div class="two-col">'
+        +'<div class="form-row"><label>Author name</label><input id="f-author" value="'+esc(d.author_name||'')+'"/></div>'
+        +'<div class="form-row"><label>Category</label><select id="f-cat">'+acatOpts+'</select></div>'
+      +'</div>'
+      +'<div class="two-col">'
+        +'<div class="form-row"><label>Read time (minutes)</label><input type="number" id="f-readtime" value="'+(d.read_time_minutes||3)+'" min="1" max="60"/></div>'
+        +'<div class="form-row"><label>External link (optional)</label><input id="f-exturl" placeholder="https://..." value="'+esc(d.external_url||'')+'"/></div>'
+      +'</div>'
+      +'<div class="form-row" style="display:flex;align-items:center;gap:10px;background:#FAEEDA;border-radius:8px;padding:10px 14px">'
+        +'<input type="checkbox" id="f-hero" style="width:16px;height:16px;accent-color:#BA7517" '+heroChecked+'/>'
+        +'<label for="f-hero" style="font-size:13px;color:#854F0B;font-weight:500;cursor:pointer">Set as hero banner on home screen <span style="font-size:11px;font-weight:400">(replaces current hero)</span></label>'
+      +'</div>'
+      +'<div class="form-row"><label>Cover image (shown in hero banner)</label>'+imgField(d.cover_image_url,'f-img')+'</div>'
+      +'<div class="form-row"><label>Article body *</label>'
+        +'<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">'
+          +'<div class="rte-toolbar">'
+            +'<button type="button" onclick="rte(\'bold\')"><b>B</b></button>'
+            +'<button type="button" onclick="rte(\'italic\')"><i>I</i></button>'
+            +'<button type="button" onclick="rte(\'underline\')"><u>U</u></button>'
+            +'<button type="button" onclick="rteBlock(\'h2\')">H2</button>'
+            +'<button type="button" onclick="rteBlock(\'h3\')">H3</button>'
+            +'<button type="button" onclick="rteBlock(\'p\')">P</button>'
+            +'<button type="button" onclick="rte(\'insertUnorderedList\')">• List</button>'
+            +'<button type="button" onclick="rte(\'insertOrderedList\')">1. List</button>'
+            +'<button type="button" onclick="rteLink()">🔗 Link</button>'
+            +'<button type="button" onclick="rteImage()">🖼 Image</button>'
+            +'<button type="button" onclick="rteBlock(\'blockquote\')">❝ Quote</button>'
+            +'<button type="button" onclick="rte(\'removeFormat\')">✕ Clear</button>'
+          +'</div>'
+          +'<div id="f-body-editor" class="rte-body" contenteditable="true">'+existingBody+'</div>'
+        +'</div>'
+        +'<div style="font-size:11px;color:var(--text3);margin-top:4px">Use toolbar to add formatting, links and inline images.</div>'
+      +'</div>'
+      +sf;
+  }
+  if(type==='sermons'){
+    return '<div class="form-row"><label>Sermon title *</label><input id="f-title" value="'+esc(d.title||'')+'"/></div>'
+      +'<div class="form-row"><label>Subtitle</label><input id="f-subtitle" value="'+esc(d.subtitle||'')+'"/></div>'
+      +'<div class="two-col">'
+        +'<div class="form-row"><label>Pastor / speaker *</label><input id="f-pastor" value="'+esc(d.pastor_name||'')+'"/></div>'
+        +'<div class="form-row"><label>Series name</label><input id="f-series" value="'+esc(d.series_name||'')+'"/></div>'
+      +'</div>'
+      +'<div class="form-row"><label>Scripture reference</label><input id="f-scripture" placeholder="e.g. John 3:16" value="'+esc(d.scripture_reference||'')+'"/></div>'
+      +'<div class="form-row"><label>Description</label><textarea id="f-desc">'+esc(d.description||'')+'</textarea></div>'
+      +'<div class="form-row"><label>Audio file (MP3)</label>'
+        +'<div class="upload-zone" onclick="document.getElementById(\'f-audio-file\').click()">'
+          +'<div style="font-size:28px">🎙</div><p>Click to upload audio</p><small>MP3 M4A up to 100MB</small>'
+          +'<input type="file" id="f-audio-file" accept="audio/*" style="display:none" onchange="upAudio(this)"/>'
+          +'<div class="upload-progress" id="f-audio-prog"><div class="upload-progress-bar" id="f-audio-bar"></div></div>'
+        +'</div>'
+        +'<input type="hidden" id="f-audio-url" value="'+esc(d.audio_url||'')+'"/>'
+        +'<p style="font-size:11px;margin-top:6px;color:'+(d.audio_url?'var(--t)':'var(--text3)')+'" id="audio-st">'+(d.audio_url?'Audio already uploaded':'No file uploaded yet')+'</p>'
+      +'</div>'
+      +'<div class="form-row"><label>Thumbnail image</label>'+imgField(d.thumbnail_url,'f-img')+'</div>'
+      +sf;
+  }
+  return '';
+}
+
+function copyArticleLink(id, btn){
+  var base = window.location.href.replace('admin-dashboard.html','').replace(/\/$/, '');
+  var link = base + '/article.html?id=' + id;
+  navigator.clipboard.writeText(link).then(function(){
+    var orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.style.color = '#0F6E56';
+    setTimeout(function(){ btn.textContent = orig; btn.style.color = '#185FA5'; }, 2000);
+  }).catch(function(){
+    prompt('Copy this link:', base + '/article.html?id=' + id);
+  });
+}
+
+function rte(cmd){ document.execCommand(cmd,false,null); document.getElementById('f-body-editor').focus(); }
+function rteBlock(tag){ document.execCommand('formatBlock',false,tag); document.getElementById('f-body-editor').focus(); }
+function rteLink(){ var url=prompt('Enter URL:'); if(url){ var txt=window.getSelection().toString()||url; document.execCommand('insertHTML',false,'<a href="'+url+'" target="_blank">'+txt+'</a>'); } }
+function rteImage(){ var url=prompt('Enter image URL:'); if(url) document.execCommand('insertHTML',false,'<img src="'+url+'" style="max-width:100%;border-radius:8px;margin:8px 0"/>'); }
+
+function gv(id){ var el=document.getElementById(id); return el?el.value.trim():''; }
+
+async function prevImg(input,prevId,urlId){
+  var f=input.files[0]; if(!f)return;
+  var pr=document.getElementById(prevId);
+  var rd=new FileReader();
+  rd.onload=function(ev){pr.src=ev.target.result;pr.style.display='block';};
+  rd.readAsDataURL(f);
+  var url=await upFile(f,getBucket(CM),'f-img-prog','f-img-bar');
+  if(url) document.getElementById(urlId).value=url;
+}
+async function upAudio(input){
+  var f=input.files[0]; if(!f)return;
+  var st=document.getElementById('audio-st'); st.textContent='Uploading...';
+  var url=await upFile(f,'sermon-audio','f-audio-prog','f-audio-bar');
+  if(url){ document.getElementById('f-audio-url').value=url; st.textContent='Uploaded: '+f.name; st.style.color='var(--t)'; }
+}
+async function upFile(file,bucket,progId,barId){
+  var prog=document.getElementById(progId), bar=document.getElementById(barId);
+  prog.style.display='block'; bar.style.width='40%';
+  var ext=file.name.split('.').pop();
+  var path=Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext;
+  bar.style.width='70%';
+  var res=await SB.storage.from(bucket).upload(path,file,{upsert:true});
+  bar.style.width='100%';
+  setTimeout(function(){prog.style.display='none';bar.style.width='0';},500);
+  if(res.error){showToast('Upload failed: '+res.error.message,true);return null;}
+  return SB.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+}
+function getBucket(type){
+  var map={announcements:'announcement-images',events:'event-posters',articles:'article-covers',sermons:'sermon-thumbnails'};
+  return map[type]||'announcement-images';
+}
+
+function notifPrefField(type){
+  if(type==='announcements') return 'announcements_enabled';
+  if(type==='events') return 'events_enabled';
+  if(type==='articles') return 'articles_enabled';
+  return null;
+}
+
+function notifTitle(type){
+  if(type==='announcements') return 'New announcement';
+  if(type==='events') return 'New event';
+  if(type==='articles') return 'New article';
+  return 'New update';
+}
+
+async function sendContentNotifications(type,payload){
+  var prefField=notifPrefField(type);
+  if(!prefField) return;
+
+  var prefRes=await SB.from('user_notification_preferences').select('user_id,announcements_enabled,events_enabled,articles_enabled');
+  if(prefRes.error) return;
+
+  var tokenRes=await SB.from('user_push_tokens').select('user_id,expo_push_token');
+  if(tokenRes.error) return;
+
+  var prefMap={};
+  (prefRes.data||[]).forEach(function(p){ prefMap[p.user_id]=p; });
+
+  var messages=[];
+  (tokenRes.data||[]).forEach(function(t){
+    if(!t.expo_push_token) return;
+    var pref=prefMap[t.user_id];
+    var allowed=pref?pref[prefField]!==false:true;
+    if(!allowed) return;
+
+    messages.push({
+      to:t.expo_push_token,
+      sound:'default',
+      title:notifTitle(type),
+      body:(payload && payload.title)?payload.title:'New content is available',
+      data:{ type:type }
+    });
+  });
+
+  if(messages.length===0) return;
+
+  for(var i=0;i<messages.length;i+=100){
+    var chunk=messages.slice(i,i+100);
+    try{
+      await fetch('https://exp.host/--/api/v2/push/send',{
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify(chunk)
+      });
+    } catch(_){}
+  }
+}
+
+async function submitForm(){
+  var btn=document.getElementById('btn-save');
+  btn.disabled=true; btn.textContent='Saving...';
+  var pub=gv('f-pub')!=='false';
+  var payload={};
+  try{
+    if(CM==='announcements'){
+      if(!gv('f-title')) throw new Error('Title is required');
+      if(!gv('f-content')) throw new Error('Body is required');
+      payload={title:gv('f-title'),subtitle:gv('f-subtitle')||null,content:gv('f-content'),image_url:gv('f-img-url')||null,is_published:pub};
+      if(!EID) payload.created_by=CU.id;
+    } else if(CM==='events'){
+      if(!gv('f-title')) throw new Error('Title is required');
+      if(!gv('f-date')) throw new Error('Date and time is required');
+      payload={title:gv('f-title'),subtitle:gv('f-subtitle')||null,description:gv('f-desc')||null,event_date:new Date(gv('f-date')).toISOString(),end_date:gv('f-enddate')?new Date(gv('f-enddate')).toISOString():null,location:gv('f-loc')||null,category:gv('f-cat'),image_url:gv('f-img-url')||null,is_published:pub};
+      if(!EID) payload.created_by=CU.id;
+    } else if(CM==='articles'){
+      var editor=document.getElementById('f-body-editor');
+      var bodyHtml=editor?editor.innerHTML.trim():'';
+      var bodyText=editor?editor.innerText.trim():'';
+      if(!gv('f-title')) throw new Error('Title is required');
+      if(!bodyHtml||bodyHtml==='<br>') throw new Error('Article body is required');
+      var isHero=document.getElementById('f-hero')?document.getElementById('f-hero').checked:false;
+      payload={title:gv('f-title'),subtitle:gv('f-subtitle')||null,body:bodyText,body_html:bodyHtml,author_name:gv('f-author')||null,category:gv('f-cat'),read_time_minutes:parseInt(gv('f-readtime'))||3,cover_image_url:gv('f-img-url')||null,external_url:gv('f-exturl')||null,is_hero:isHero,is_published:pub};
+      if(!EID) payload.created_by=CU.id;
+    } else if(CM==='sermons'){
+      if(!gv('f-title')) throw new Error('Title is required');
+      if(!gv('f-pastor')) throw new Error('Pastor name is required');
+      payload={title:gv('f-title'),subtitle:gv('f-subtitle')||null,pastor_name:gv('f-pastor'),series_name:gv('f-series')||null,scripture_reference:gv('f-scripture')||null,description:gv('f-desc')||null,audio_url:gv('f-audio-url')||null,thumbnail_url:gv('f-img-url')||null,is_published:pub};
+      if(!EID) payload.created_by=CU.id;
+    }
+    var tbl=CM;
+    var res;
+    if(EID){
+      res=await SB.from(tbl).update(payload).eq('id',EID).select('id').maybeSingle();
+      if(!res.error&&!res.data) throw new Error('Update was blocked or no matching record was found. Check your row-level security policies.');
+    }
+    else     res=await SB.from(tbl).insert(payload);
+    if(res.error) throw new Error(res.error.message);
+    var savedType=CM;
+    var activeBeforeSave=document.querySelector('.page.active');
+    activeBeforeSave=activeBeforeSave&&activeBeforeSave.id?activeBeforeSave.id.replace('page-',''):null;
+    showToast(EID?'Updated successfully!':'Published successfully!');
+
+    // Send push notifications for published content updates.
+    if(savedType&&pub&&(savedType==='announcements'||savedType==='events'||savedType==='articles')){
+      sendContentNotifications(savedType,payload);
+    }
+
+    closeModal();
+    if(savedType) await loadList(savedType);
+    loadStats();
+
+    if(activeBeforeSave==='dashboard'&&savedType&&(savedType==='announcements'||savedType==='events'||savedType==='articles')){
+      var navButtons=document.querySelectorAll('.nav-item');
+      for(var i=0;i<navButtons.length;i++){
+        var onclick=String(navButtons[i].getAttribute('onclick')||'');
+        if(onclick.indexOf("showPage('"+savedType+"'")!==-1){
+          showPage(savedType,navButtons[i]);
+          break;
+        }
+      }
+    }
+  } catch(err){
+    showToast(err.message,true);
+  }
+  btn.disabled=false; btn.textContent='Save and publish';
+}
+
+async function delItem(tbl,id,listType){
+  if(!confirm('Delete this item? This cannot be undone.')) return;
+  var res=await SB.from(tbl).delete().eq('id',id);
+  if(res.error) return showToast('Delete failed: '+res.error.message,true);
+  showToast('Deleted');
+  loadList(listType);
+  loadStats();
+}
+
+function openMobileListFromStat(type){
+  if(!window.matchMedia('(max-width: 900px)').matches) return;
+  var navButtons=document.querySelectorAll('.nav-item');
+  for(var i=0;i<navButtons.length;i++){
+    var onclick=String(navButtons[i].getAttribute('onclick')||'');
+    if(onclick.indexOf("showPage('"+type+"'")!==-1){
+      showPage(type,navButtons[i]);
+      window.scrollTo({top:0,behavior:'smooth'});
+      return;
+    }
+  }
+}
+
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+  loadList(name);
+}
+
+function showToast(msg,err){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show'+(err?' error':'');
+  setTimeout(function(){t.className='toast';},3000);
+}
+
+window.onload=async function(){
+  var url=localStorage.getItem(UK), key=localStorage.getItem(KK);
+  if(!url||!key){ document.getElementById('setup').style.display='flex'; return; }
+  SB=window.supabase.createClient(url,key);
+  var res=await SB.auth.getSession();
+  if(res.data.session) showApp(res.data.session.user);
+  else showLogin();
+};
+</script>
+</body>
+</html>

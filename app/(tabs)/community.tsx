@@ -360,7 +360,7 @@ function FeedTab({ currentUser }: { currentUser: User | null; }) {
   const handleShare = async (post: Post) => {
     try {
       await Share.share({
-        message: `Check out this post from The Church of Jesus Christ OF LATTER-DAY SAINTS community!`,
+        message: `Check out this post from Reformed Church of John the Baptist community!`,
       });
     } catch (error) {
       Alert.alert('Error', 'Could not share post.');

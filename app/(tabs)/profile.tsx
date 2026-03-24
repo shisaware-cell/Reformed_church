@@ -239,7 +239,7 @@ export default function ProfileScreen() {
           <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
             <Text style={styles.signOutText}>Sign out</Text>
           </TouchableOpacity>
-          <Text style={styles.version}>The Church of Jesus Christ OF LATTER-DAY SAINTS · v1.0.0</Text>
+          <Text style={styles.version}>Reformed Church of John the Baptist · v1.0.0</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

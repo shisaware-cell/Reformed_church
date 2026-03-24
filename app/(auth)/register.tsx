@@ -36,7 +36,7 @@ export default function RegisterScreen() {
         <View style={styles.brand}>
           <View style={styles.logoWrap}><Logo size="large" /></View>
           <Text style={styles.brandName}>Join our community</Text>
-          <Text style={styles.brandTag}>The Church of Jesus Christ OF LATTER-DAY SAINTS</Text>
+          <Text style={styles.brandTag}>Reformed Church of John the Baptist</Text>
         </View>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Create account</Text>

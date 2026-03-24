@@ -31,7 +31,7 @@ export default function IndexRoute() {
       <View style={styles.screen}>
         <View style={styles.loaderCard}>
           <View style={styles.loaderLogoWrap}><Logo size="large" /></View>
-          <Text style={styles.loaderTitle}>The Church of Jesus Christ OF LATTER-DAY SAINTS</Text>
+          <Text style={styles.loaderTitle}>Reformed Church of John the Baptist</Text>
           <Text style={styles.loaderSubtitle}>Preparing your experience</Text>
           <ActivityIndicator color={Colors.primary} style={styles.loaderSpinner} />
         </View>

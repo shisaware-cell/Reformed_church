@@ -72,7 +72,7 @@ export default function HomeScreen() {
         <View style={styles.topBar}>
           <View style={styles.topTextWrap}>
             <Text style={styles.topGreeting}>{greeting()}{userName ? `, ${userName}` : ''}</Text>
-            <Text style={styles.topChurchMain}>THE CHURCH OF JESUS CHRIST</Text>
+            <Text style={styles.topChurchMain}>REFORMED CHURCH OF JOHN THE BAPTIST</Text>
             <Text style={styles.topChurchSub}>OF LATTER DAY SAINTS</Text>
           </View>
           <Logo size="small" />
@@ -97,7 +97,7 @@ export default function HomeScreen() {
         ) : (
           <View style={styles.heroFallback}>
             <Text style={styles.heroFallbackCross}>✝</Text>
-            <Text style={styles.heroFallbackTitle}>Welcome to The Church of Jesus Christ OF LATTER-DAY SAINTS</Text>
+            <Text style={styles.heroFallbackTitle}>Welcome to Reformed Church of John the Baptist</Text>
             <Text style={styles.heroFallbackSub}>Grow in faith, community and purpose</Text>
           </View>
         )}

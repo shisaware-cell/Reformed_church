@@ -134,7 +134,7 @@ export default function ScripturesScreen() {
   }
 
   function toggleSave(ref: string) { setSaved((vs) => vs.includes(ref) ? vs.filter((v) => v !== ref) : [...vs, ref]); }
-  async function shareVerse(v: { ref: string; text: string }) { await Share.share({ message: `"${v.text}"\n— ${v.ref}\n\nShared from The Church of Jesus Christ OF LATTER-DAY SAINTS` }); }
+  async function shareVerse(v: { ref: string; text: string }) { await Share.share({ message: `"${v.text}"\n— ${v.ref}\n\nShared from Reformed Church of John the Baptist` }); }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>

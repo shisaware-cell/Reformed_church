@@ -18,7 +18,7 @@ export default function AnnouncementDetailScreen() {
 
   async function shareAnnouncement() {
     if (!announcement) return;
-    await Share.share({ message: `${announcement.title}\n\n${announcement.content}\n\nThe Church of Jesus Christ OF LATTER-DAY SAINTS` });
+    await Share.share({ message: `${announcement.title}\n\n${announcement.content}\n\nReformed Church of John the Baptist` });
   }
 
   const fmt = (d: string) => new Date(d).toLocaleDateString('en-ZA', {

@@ -27,8 +27,7 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.brand}>
           <View style={styles.logoWrap}><Logo size="large" /></View>
-          <Text style={styles.brandName}>The Church of Jesus Christ OF LATTER-DAY SAINTS</Text>
-          <Text style={styles.brandTag}>Members Community</Text>
+          <Text style={styles.brandName}>Reformed Church of John the Baptist</Text>
         </View>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Welcome back</Text>

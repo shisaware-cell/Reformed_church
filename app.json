@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "The Church of Jesus Christ OF LATTER-DAY SAINTS",
+    "name": "Reformed Church of John the Baptist",
     "slug": "cojc-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#592569"
+      "backgroundColor": "#a51206"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -30,7 +30,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#592569",
+          "backgroundColor": "#a51206",
           "image": "./assets/icon.png",
           "imageWidth": 220
         }

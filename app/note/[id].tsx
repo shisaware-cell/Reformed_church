@@ -62,7 +62,7 @@ export default function NoteDetailScreen() {
   function handleScriptureChange(s: string) { setScripture(s); autoSave(title, body, s); }
 
   async function shareNote() {
-    await Share.share({ message: `${title}\n\n${body}${scripture ? `\n\nScripture: ${scripture}` : ''}\n\nShared from The Church of Jesus Christ OF LATTER-DAY SAINTS` });
+    await Share.share({ message: `${title}\n\n${body}${scripture ? `\n\nScripture: ${scripture}` : ''}\n\nShared from Reformed Church of John the Baptist` });
   }
 
   if (loading) return <View style={styles.center}><ActivityIndicator color={Colors.primary} /></View>;

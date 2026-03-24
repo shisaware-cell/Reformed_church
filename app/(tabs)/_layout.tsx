@@ -10,6 +10,7 @@ const ICONS: Record<string, { active: string; inactive: string }> = {
   music:      { active: '♪',  inactive: '♫'  },
   teachings:  { active: '▶',  inactive: '▶'  },
   profile:    { active: '👤',  inactive: '👤'  },
+  more:       { active: '⋯',  inactive: '⋯'  },
 };
 
 function TabIcon({ name, focused, label }: { name: string; focused: boolean; label: string }) {
@@ -34,11 +35,14 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index"      options={{ title: 'Home',       tabBarIcon: ({ focused }) => <TabIcon name="index"      focused={focused} label="Home"       /> }} />
       <Tabs.Screen name="community"  options={{ title: 'Community',  tabBarIcon: ({ focused }) => <TabIcon name="community"  focused={focused} label="Community"  /> }} />
-      <Tabs.Screen name="notes"      options={{ title: 'Notes',      tabBarIcon: ({ focused }) => <TabIcon name="notes"      focused={focused} label="Notes"      /> }} />
       <Tabs.Screen name="bible"      options={{ title: 'Bible',      tabBarIcon: ({ focused }) => <TabIcon name="bible"      focused={focused} label="Bible"      /> }} />
-      <Tabs.Screen name="music"      options={{ title: 'Music',      tabBarIcon: ({ focused }) => <TabIcon name="music"      focused={focused} label="Music"      /> }} />
-      <Tabs.Screen name="teachings"  options={{ title: 'Teachings',  tabBarIcon: ({ focused }) => <TabIcon name="teachings"  focused={focused} label="Teachings"  /> }} />
+      <Tabs.Screen name="more"       options={{ title: 'More',       tabBarIcon: ({ focused }) => <TabIcon name="more"       focused={focused} label="More"       /> }} />
       <Tabs.Screen name="profile"    options={{ title: 'Profile',    tabBarIcon: ({ focused }) => <TabIcon name="profile"    focused={focused} label="Profile"    /> }} />
+
+      <Tabs.Screen name="notes"      options={{ href: null }} />
+      <Tabs.Screen name="music"      options={{ href: null }} />
+      <Tabs.Screen name="teachings"  options={{ href: null }} />
+      <Tabs.Screen name="scriptures" options={{ href: null }} />
     </Tabs>
   );
 }

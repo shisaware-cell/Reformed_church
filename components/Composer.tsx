@@ -82,6 +82,7 @@ const Composer: React.FC<ComposerProps> = ({ onClose, currentUser }) => {
         style={StyleSheet.absoluteFillObject}
       />
       <View style={styles.modalContainer}>
+        {/* Fixed header — always visible */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Create Post</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -89,6 +90,7 @@ const Composer: React.FC<ComposerProps> = ({ onClose, currentUser }) => {
           </TouchableOpacity>
         </View>
 
+        {/* Scrollable content area only — buttons live outside */}
         <ScrollView
           style={styles.formScroll}
           contentContainerStyle={styles.formScrollContent}
@@ -103,26 +105,35 @@ const Composer: React.FC<ComposerProps> = ({ onClose, currentUser }) => {
             value={content}
             onChangeText={setContent}
           />
-          {image && <Image source={{ uri: image }} style={styles.previewImage} />}
+          {image && (
+            <View style={styles.previewWrap}>
+              <Image source={{ uri: image }} style={styles.previewImage} />
+              <TouchableOpacity style={styles.removeImageBtn} onPress={() => setImage(null)}>
+                <Text style={styles.removeImageText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           <View style={styles.actions}>
             <TouchableOpacity onPress={pickImage} style={styles.actionButton}>
               <MaterialCommunityIcons name="image-plus" size={20} color={Colors.primary} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.footerActions}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.postButton, (posting || (!content.trim() && !image)) && styles.postButtonDisabled]}
-              onPress={submitPost}
-              disabled={posting || (!content.trim() && !image)}
-            >
-              {posting ? <ActivityIndicator color="#fff" /> : <Text style={styles.postButtonText}>Post</Text>}
+              <Text style={styles.actionButtonText}>{image ? 'Change photo' : 'Add photo'}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
+
+        {/* Fixed footer — ALWAYS visible, outside ScrollView */}
+        <View style={styles.footerActions}>
+          <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.postButton, (posting || (!content.trim() && !image)) && styles.postButtonDisabled]}
+            onPress={submitPost}
+            disabled={posting || (!content.trim() && !image)}
+          >
+            {posting ? <ActivityIndicator color="#fff" /> : <Text style={styles.postButtonText}>Post</Text>}
+          </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -144,14 +155,17 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     width: '90%',
     maxHeight: '86%',
-    padding: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 0,
     ...Shadow.lg,
+    overflow: 'hidden',
   },
   formScroll: {
-    flexGrow: 0,
+    flexShrink: 1,
   },
   formScrollContent: {
-    paddingBottom: 6,
+    paddingBottom: 8,
   },
   header: {
     flexDirection: 'row',
@@ -181,23 +195,61 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     marginBottom: 10,
   },
+  previewWrap: {
+    position: 'relative',
+    marginBottom: 10,
+  },
   previewImage: {
     width: '100%',
     height: 200,
     borderRadius: Radius.md,
-    marginBottom: 10,
+  },
+  removeImageBtn: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeImageText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 16,
   },
   actions: {
     flexDirection: 'row',
-    marginBottom: 15,
+    marginBottom: 4,
   },
   actionButton: {
-    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
     paddingHorizontal: 12,
     backgroundColor: Colors.primaryLight,
     borderWidth: 1,
     borderColor: Colors.primary,
     borderRadius: Radius.md,
+  },
+  actionButtonText: {
+    color: Colors.primary,
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  footerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 0,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    marginTop: 8,
   },
   postButton: {
     backgroundColor: Colors.primary,
@@ -206,12 +258,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     alignItems: 'center',
     flex: 1,
-  },
-  footerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 4,
   },
   cancelButton: {
     paddingVertical: 14,

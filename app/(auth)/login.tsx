@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.bg },
   container: { flexGrow: 1, justifyContent: 'center', padding: 24, paddingBottom: 48 },
   brand: { alignItems: 'center', marginBottom: 40 },
-  logoWrap: { width: 112, height: 112, borderRadius: 28, backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center', marginBottom: 18, borderWidth: 1, borderColor: Colors.border, ...Shadow.lg },
+  logoWrap: { width: 112, height: 112, borderRadius: 28, overflow: 'hidden', backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center', marginBottom: 18, borderWidth: 1, borderColor: Colors.border, ...Shadow.lg },
   brandName: { fontSize: 20, fontWeight: '800', color: Colors.text, letterSpacing: -0.4, textAlign: 'center' },
   brandTag: { fontSize: 12, color: Colors.text3, marginTop: 4, letterSpacing: 0.3 },
   card: { backgroundColor: Colors.card, borderRadius: Radius.xl, padding: 26, borderWidth: 1, borderColor: Colors.border, ...Shadow.md },

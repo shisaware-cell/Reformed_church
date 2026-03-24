@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   Image, RefreshControl, ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Audio } from 'expo-av';
 import { supabase } from '@/lib/supabase';
 import { Colors, Radius, Shadow } from '@/lib/theme';
-import type { Article, Announcement, Event, Sermon } from '@/lib/types';
+import type { Article, Announcement, Event, Sermon, Song } from '@/lib/types';
 import Logo from '@/components/Logo';
 
 export default function HomeScreen() {
@@ -15,9 +16,13 @@ export default function HomeScreen() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [sermons, setSermons] = useState<Sermon[]>([]);
+  const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userName, setUserName] = useState('');
+  const [activeSongId, setActiveSongId] = useState<string | null>(null);
+  const [songPlaying, setSongPlaying] = useState(false);
+  const soundRef = useRef<Audio.Sound | null>(null);
 
   async function load() {
     const { data: { session } } = await supabase.auth.getSession();
@@ -27,22 +32,62 @@ export default function HomeScreen() {
       else if (session.user.user_metadata?.name) setUserName(String(session.user.user_metadata.name).split(' ')[0]);
     }
 
-    const [heroRes, annRes, evRes, serRes] = await Promise.all([
+    const [heroRes, annRes, evRes, serRes, songsRes] = await Promise.all([
       supabase.from('articles').select('*').eq('is_hero', true).eq('is_published', true).single(),
       supabase.from('announcements').select('*').eq('is_published', true).order('created_at', { ascending: false }).limit(4),
       supabase.from('events').select('*').eq('is_published', true).gte('event_date', new Date().toISOString()).order('event_date', { ascending: true }).limit(5),
       supabase.from('sermons').select('*').eq('is_published', true).order('created_at', { ascending: false }).limit(3),
+      supabase.from('songs').select('*').eq('is_published', true).order('created_at', { ascending: false }).limit(5),
     ]);
 
     if (heroRes.data) setHero(heroRes.data);
     if (annRes.data) setAnnouncements(annRes.data);
     if (evRes.data) setEvents(evRes.data);
     if (serRes.data) setSermons(serRes.data);
+    if (songsRes.data) setSongs(songsRes.data as Song[]);
     setLoading(false);
     setRefreshing(false);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    return () => {
+      if (soundRef.current) soundRef.current.unloadAsync();
+    };
+  }, []);
+
+  async function toggleSong(song: Song) {
+    const mediaUrl = song.file_url;
+    if (!mediaUrl) return;
+
+    if (activeSongId === song.id && songPlaying && soundRef.current) {
+      await soundRef.current.pauseAsync();
+      setSongPlaying(false);
+      return;
+    }
+
+    if (soundRef.current) {
+      await soundRef.current.unloadAsync();
+      soundRef.current = null;
+    }
+
+    const { sound } = await Audio.Sound.createAsync(
+      { uri: mediaUrl },
+      { shouldPlay: true },
+      (status) => {
+        if (!status.isLoaded) return;
+        setSongPlaying(status.isPlaying);
+        if (status.didJustFinish) {
+          setSongPlaying(false);
+          setActiveSongId(null);
+        }
+      }
+    );
+
+    soundRef.current = sound;
+    setActiveSongId(song.id);
+    setSongPlaying(true);
+  }
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -73,7 +118,6 @@ export default function HomeScreen() {
           <View style={styles.topTextWrap}>
             <Text style={styles.topGreeting}>{greeting()}{userName ? `, ${userName}` : ''}</Text>
             <Text style={styles.topChurchMain}>REFORMED CHURCH OF JOHN THE BAPTIST</Text>
-            <Text style={styles.topChurchSub}>OF LATTER DAY SAINTS</Text>
           </View>
           <Logo size="small" />
         </View>
@@ -126,6 +170,35 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
           ))}
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionTitle}>Music</Text>
+            <Text style={styles.sectionMeta}>Songs playlist</Text>
+          </View>
+          {songs.length === 0 ? (
+            <View style={styles.emptySongCard}>
+              <Text style={styles.emptySongTitle}>No songs published yet</Text>
+              <Text style={styles.emptySongSub}>Songs uploaded by admin will appear here.</Text>
+            </View>
+          ) : (
+            songs.map((song) => {
+              const active = activeSongId === song.id && songPlaying;
+              return (
+                <TouchableOpacity key={song.id} style={styles.songCard} onPress={() => toggleSong(song)} activeOpacity={0.9}>
+                  <View style={styles.songThumb}><Text style={styles.songThumbIcon}>♪</Text></View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.songTitle} numberOfLines={1}>{song.title}</Text>
+                    {song.artist_name ? <Text style={styles.songArtist} numberOfLines={1}>{song.artist_name}</Text> : null}
+                  </View>
+                  <View style={[styles.songPlay, active && styles.songPlayActive]}>
+                    <Text style={styles.songPlayText}>{active ? 'II' : '▶'}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
         </View>
 
         {events.length > 0 && (
@@ -219,7 +292,6 @@ const styles = StyleSheet.create({
   },
   topGreeting: { fontSize: 12, color: Colors.text3, fontWeight: '600' },
   topChurchMain: { fontSize: 13, fontWeight: '900', color: Colors.text, letterSpacing: -0.1, marginTop: 3 },
-  topChurchSub: { fontSize: 11, fontWeight: '700', color: Colors.text2, letterSpacing: 0.5, marginTop: 1 },
   topLogoWrap: {
     width: 44,
     height: 44,
@@ -279,6 +351,49 @@ const styles = StyleSheet.create({
   annTitle: { fontSize: 13, fontWeight: '700', color: Colors.text, marginBottom: 3 },
   annContent: { fontSize: 12, color: Colors.text2, lineHeight: 17 },
   annDate: { fontSize: 10, color: Colors.primary, marginTop: 5, fontWeight: '700' },
+
+  songCard: {
+    backgroundColor: Colors.card,
+    borderRadius: Radius.md,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    ...Shadow.xs,
+  },
+  songThumb: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primaryLight,
+  },
+  songThumbIcon: { fontSize: 20, color: Colors.primary },
+  songTitle: { fontSize: 13, fontWeight: '700', color: Colors.text },
+  songArtist: { marginTop: 2, fontSize: 11, color: Colors.text3 },
+  songPlay: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+  },
+  songPlayActive: { backgroundColor: Colors.primaryDark },
+  songPlayText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+  emptySongCard: {
+    backgroundColor: Colors.card,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    padding: 14,
+  },
+  emptySongTitle: { fontSize: 13, fontWeight: '700', color: Colors.text },
+  emptySongSub: { marginTop: 4, fontSize: 12, color: Colors.text2 },
 
   evCard: {
     width: 168,

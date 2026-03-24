@@ -39,6 +39,7 @@ export default function BibleScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedVerseNumbers, setSelectedVerseNumbers] = useState<number[]>([]);
+  const [showBookPicker, setShowBookPicker] = useState(false);
 
   useEffect(() => {
     loadChapter(book.name, chapter);
@@ -85,6 +86,7 @@ export default function BibleScreen() {
   function selectBook(nextBook: BibleBook) {
     setBook(nextBook);
     setChapter(1);
+    setShowBookPicker(false);
   }
 
   function toggleVerse(number: number) {
@@ -104,34 +106,45 @@ export default function BibleScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Bible (KJV)</Text>
-        <Text style={styles.subtitle}>Read the Old King James Version and select verses to share.</Text>
+        <Text style={styles.subtitle}>Read the Old King James Version and tap verses to select.</Text>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.bookRow}>
-        {KJV_BOOKS.map((b) => {
-          const active = b.name === book.name;
-          return (
-            <TouchableOpacity key={b.name} style={[styles.bookChip, active && styles.bookChipActive]} onPress={() => selectBook(b)}>
-              <Text style={[styles.bookChipText, active && styles.bookChipTextActive]}>{b.name}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <View style={styles.controlsCard}>
+        <View style={styles.controlsRow}>
+          <TouchableOpacity style={styles.bookBtn} onPress={() => setShowBookPicker((v) => !v)}>
+            <Text style={styles.bookBtnLabel}>Book</Text>
+            <Text style={styles.bookBtnValue}>{book.name}</Text>
+          </TouchableOpacity>
 
-      <View style={styles.chapterBar}>
-        <TouchableOpacity style={styles.chapterBtn} onPress={goPrevChapter} disabled={chapter <= 1}>
-          <Text style={[styles.chapterBtnText, chapter <= 1 && styles.chapterBtnTextDisabled]}>◀</Text>
-        </TouchableOpacity>
-        <Text style={styles.chapterLabel}>{reference}</Text>
-        <TouchableOpacity style={styles.chapterBtn} onPress={goNextChapter} disabled={chapter >= book.chapters}>
-          <Text style={[styles.chapterBtnText, chapter >= book.chapters && styles.chapterBtnTextDisabled]}>▶</Text>
-        </TouchableOpacity>
+          <View style={styles.chapterWrap}>
+            <TouchableOpacity style={styles.stepBtn} onPress={goPrevChapter} disabled={chapter <= 1}>
+              <Text style={[styles.stepBtnText, chapter <= 1 && styles.stepBtnTextDisabled]}>−</Text>
+            </TouchableOpacity>
+            <Text style={styles.chapterText}>Chapter {chapter}</Text>
+            <TouchableOpacity style={styles.stepBtn} onPress={goNextChapter} disabled={chapter >= book.chapters}>
+              <Text style={[styles.stepBtnText, chapter >= book.chapters && styles.stepBtnTextDisabled]}>+</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {showBookPicker ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.bookList}>
+            {KJV_BOOKS.map((b) => {
+              const active = b.name === book.name;
+              return (
+                <TouchableOpacity key={b.name} style={[styles.bookChip, active && styles.bookChipActive]} onPress={() => selectBook(b)}>
+                  <Text style={[styles.bookChipText, active && styles.bookChipTextActive]}>{b.name}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        ) : null}
       </View>
 
       <View style={styles.selectionBar}>
-        <Text style={styles.selectionText}>Selected verses: {selectedVerseNumbers.length}</Text>
+        <Text style={styles.selectionText}>{reference}</Text>
         <TouchableOpacity style={[styles.shareBtn, !selectedVerseNumbers.length && styles.shareBtnDisabled]} onPress={shareSelection} disabled={!selectedVerseNumbers.length}>
-          <Text style={styles.shareBtnText}>Share selection</Text>
+          <Text style={styles.shareBtnText}>Share {selectedVerseNumbers.length || ''}</Text>
         </TouchableOpacity>
       </View>
 
@@ -166,61 +179,78 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
   title: { fontSize: 22, fontWeight: '700', color: Colors.text },
   subtitle: { fontSize: 13, color: Colors.text2, marginTop: 3 },
-  bookRow: { paddingHorizontal: 12, gap: 8, paddingBottom: 8 },
-  bookChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.card,
-  },
-  bookChipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  bookChipText: { fontSize: 12, color: Colors.text2, fontWeight: '600' },
-  bookChipTextActive: { color: Colors.white },
-  chapterBar: {
+
+  controlsCard: {
     marginHorizontal: 16,
+    marginTop: 6,
     backgroundColor: Colors.card,
-    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Colors.border,
+    borderRadius: Radius.md,
     padding: 10,
+    ...Shadow.sm,
+  },
+  controlsRow: { flexDirection: 'row', gap: 8 },
+  bookBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: Colors.bg,
+  },
+  bookBtnLabel: { fontSize: 10, color: Colors.text3, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.7 },
+  bookBtnValue: { fontSize: 13, color: Colors.text, fontWeight: '700', marginTop: 2 },
+  chapterWrap: {
+    width: 156,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.bg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 8,
   },
-  chapterBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+  stepBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.primaryLight,
   },
-  chapterBtnText: { color: Colors.primary, fontWeight: '700', fontSize: 14 },
-  chapterBtnTextDisabled: { opacity: 0.4 },
-  chapterLabel: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  stepBtnText: { fontSize: 18, fontWeight: '700', color: Colors.primary, lineHeight: 22 },
+  stepBtnTextDisabled: { opacity: 0.4 },
+  chapterText: { fontSize: 12, color: Colors.text, fontWeight: '700' },
+
+  bookList: { paddingTop: 10, gap: 6, paddingRight: 8 },
+  bookChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.bg,
+  },
+  bookChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  bookChipText: { fontSize: 12, color: Colors.text2, fontWeight: '600' },
+  bookChipTextActive: { color: Colors.white },
+
   selectionBar: {
     marginHorizontal: 16,
     marginTop: 10,
     marginBottom: 8,
-    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  selectionText: { fontSize: 12, color: Colors.text2, fontWeight: '600' },
-  shareBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.sm,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
+  selectionText: { fontSize: 12, color: Colors.text2, fontWeight: '700' },
+  shareBtn: { backgroundColor: Colors.primary, borderRadius: Radius.sm, paddingHorizontal: 12, paddingVertical: 7 },
   shareBtnDisabled: { opacity: 0.4 },
   shareBtnText: { color: Colors.white, fontSize: 12, fontWeight: '700' },
+
   list: { flex: 1 },
   listContent: { paddingHorizontal: 14, paddingBottom: 24 },
   verseCard: {
@@ -234,17 +264,8 @@ const styles = StyleSheet.create({
     gap: 10,
     ...Shadow.sm,
   },
-  verseCardActive: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primaryLight,
-  },
-  verseNo: {
-    minWidth: 24,
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.primary,
-    marginTop: 2,
-  },
+  verseCardActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
+  verseNo: { minWidth: 24, fontSize: 12, fontWeight: '700', color: Colors.primary, marginTop: 2 },
   verseNoActive: { color: Colors.primaryDark },
   verseText: { flex: 1, fontSize: 14, lineHeight: 22, color: Colors.text },
   verseTextActive: { color: Colors.primaryDeep },

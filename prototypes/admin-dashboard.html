@@ -42,7 +42,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .page-header{margin-bottom:24px}
 .page-header h2{font-size:20px;font-weight:500}
 .page-header p{font-size:13px;color:var(--text2);margin-top:3px}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px}
 .stat-card{background:#F3F3F1;border-radius:12px;padding:16px;border:1px solid var(--border)}
 .stat-card .num{font-size:26px;font-weight:500;color:var(--t)}
 .stat-card .lbl{font-size:12px;color:var(--text3);margin-top:2px}
@@ -125,7 +125,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .rsvp-empty{text-align:center;padding:30px 0;color:var(--text3);font-size:13px}
 
 /* Dashboard quick actions */
-.quick-actions{display:grid;grid-template-columns:1fr 1fr 1fr}
+.quick-actions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
 .quick-action-card{padding:18px 20px;cursor:pointer}
 .quick-action-card.with-divider{border-right:1px solid var(--border)}
 
@@ -197,6 +197,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <button class="nav-item" onclick="showPage('announcements',this)"><span class="ico">📢</span> Announcements</button>
       <button class="nav-item" onclick="showPage('events',this)"><span class="ico">📅</span> Events</button>
       <button class="nav-item" onclick="showPage('articles',this)"><span class="ico">📝</span> Articles</button>
+      <button class="nav-item" onclick="showPage('music',this)"><span class="ico">♪</span> Music</button>
+      <button class="nav-item" onclick="showPage('teachings',this)"><span class="ico">▶</span> Teachings</button>
       <button class="nav-item" onclick="showPage('community',this)"><span class="ico">💬</span> Community</button>
     </nav>
     <div class="sidebar-bottom">
@@ -215,13 +217,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div class="stat-card mobile-nav" onclick="openMobileListFromStat('announcements')"><div class="num" id="stat-ann">—</div><div class="lbl">Announcements</div><div class="view-link">View list →</div></div>
         <div class="stat-card mobile-nav" onclick="openMobileListFromStat('events')"><div class="num" id="stat-ev">—</div><div class="lbl">Events</div><div class="view-link">View list →</div></div>
         <div class="stat-card mobile-nav" onclick="openMobileListFromStat('articles')"><div class="num" id="stat-art">—</div><div class="lbl">Articles</div><div class="view-link">View list →</div></div>
+        <div class="stat-card mobile-nav" onclick="openMobileListFromStat('music')"><div class="num" id="stat-song">—</div><div class="lbl">Songs</div><div class="view-link">View list →</div></div>
+        <div class="stat-card mobile-nav" onclick="openMobileListFromStat('teachings')"><div class="num" id="stat-teach">—</div><div class="lbl">Teachings</div><div class="view-link">View list →</div></div>
       </div>
       <div class="content-list">
         <div class="list-header"><h3>Quick actions</h3></div>
         <div class="quick-actions">
           <div class="quick-action-card with-divider" onclick="openModal('announcements',null)"><div style="font-size:24px;margin-bottom:6px">📢</div><p style="font-size:13px;font-weight:500">New announcement</p><p style="font-size:11px;color:var(--text3);margin-top:2px">Post a notice to all members</p></div>
           <div class="quick-action-card with-divider" onclick="openModal('events',null)"><div style="font-size:24px;margin-bottom:6px">📅</div><p style="font-size:13px;font-weight:500">New event</p><p style="font-size:11px;color:var(--text3);margin-top:2px">Add an upcoming church event</p></div>
-          <div class="quick-action-card" onclick="openModal('articles',null)"><div style="font-size:24px;margin-bottom:6px">📝</div><p style="font-size:13px;font-weight:500">New article</p><p style="font-size:11px;color:var(--text3);margin-top:2px">Write and publish an article</p></div>
+          <div class="quick-action-card with-divider" onclick="openModal('articles',null)"><div style="font-size:24px;margin-bottom:6px">📝</div><p style="font-size:13px;font-weight:500">New article</p><p style="font-size:11px;color:var(--text3);margin-top:2px">Write and publish an article</p></div>
+          <div class="quick-action-card with-divider" onclick="openModal('songs',null)"><div style="font-size:24px;margin-bottom:6px">♪</div><p style="font-size:13px;font-weight:500">New song</p><p style="font-size:11px;color:var(--text3);margin-top:2px">Upload church songs (MP3)</p></div>
+          <div class="quick-action-card" onclick="openModal('teachings',null)"><div style="font-size:24px;margin-bottom:6px">▶</div><p style="font-size:13px;font-weight:500">New teaching</p><p style="font-size:11px;color:var(--text3);margin-top:2px">Upload Gospel principle media</p></div>
         </div>
       </div>
     </div>
@@ -237,6 +243,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="page" id="page-articles">
       <div class="page-header"><h2>Articles</h2><p>Write devotionals, testimonies, and teaching articles.</p></div>
       <div class="content-list"><div class="list-header"><h3>All articles</h3><button class="add-btn" onclick="openModal('articles',null)">+ New article</button></div><div id="list-articles"><div class="empty">Loading...</div></div></div>
+    </div>
+    <div class="page" id="page-music">
+      <div class="page-header"><h2>Music</h2><p>Upload church songs and publish them to the app music page.</p></div>
+      <div class="content-list"><div class="list-header"><h3>All songs</h3><button class="add-btn" onclick="openModal('songs',null)">+ New song</button></div><div id="list-music"><div class="empty">Loading...</div></div></div>
+    </div>
+    <div class="page" id="page-teachings">
+      <div class="page-header"><h2>Teachings</h2><p>Upload teaching media (MP3/MP4) such as Gospel principles.</p></div>
+      <div class="content-list"><div class="list-header"><h3>All teachings</h3><button class="add-btn" onclick="openModal('teachings',null)">+ New teaching</button></div><div id="list-teachings"><div class="empty">Loading...</div></div></div>
     </div>
     <div class="page" id="page-community">
       <div class="page-header"><h2>Community moderation</h2><p>Review and remove inappropriate posts.</p></div>
@@ -318,8 +332,8 @@ async function doLogout(){
 }
 
 async function loadStats(){
-  var tables=['announcements','events','articles'];
-  var ids=['stat-ann','stat-ev','stat-art'];
+  var tables=['announcements','events','articles','songs','teachings'];
+  var ids=['stat-ann','stat-ev','stat-art','stat-song','stat-teach'];
   for(var i=0;i<tables.length;i++){
     var r=await SB.from(tables[i]).select('*',{count:'exact',head:true});
     document.getElementById(ids[i]).textContent=r.count||0;
@@ -397,6 +411,8 @@ async function loadList(type){
   if(type==='announcements') res=await SB.from('announcements').select('*').order('created_at',{ascending:false});
   else if(type==='events')   res=await SB.from('events').select('*').order('event_date',{ascending:true});
   else if(type==='articles') res=await SB.from('articles').select('*').order('created_at',{ascending:false});
+  else if(type==='music')    res=await SB.from('songs').select('*').order('created_at',{ascending:false});
+  else if(type==='teachings')res=await SB.from('teachings').select('*').order('created_at',{ascending:false});
   else if(type==='sermons')  res=await SB.from('sermons').select('*').order('created_at',{ascending:false});
   else if(type==='community')res=await SB.from('posts').select('*,users(name,email)').order('created_at',{ascending:false}).limit(30);
   else return;
@@ -460,6 +476,30 @@ function buildRow(type,d,cacheKey,rsvpCounts){
       +'<button class="edit-btn" onclick="openModal(\'articles\',rowCache[\''+cacheKey+'\'])">Edit</button>'
       +'<button class="del-btn" onclick="delItem(\'articles\',\''+d.id+'\',\'articles\')">Delete</button>'
       +'</div></div>';
+  } else if(type==='music'){
+    thumb=d.cover_image_url?'<img src="'+esc(d.cover_image_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>':'♪';
+    title=d.title;
+    sub=(d.artist_name||'')+(d.file_url?' · media linked':'');
+    return '<div class="list-item">'
+      +'<div class="item-thumb">'+thumb+'</div>'
+      +'<div class="item-info"><p>'+esc(title)+'</p><small>'+esc(sub)+'</small></div>'
+      +badge
+      +'<div class="item-actions">'
+      +'<button class="edit-btn" onclick="openModal(\'songs\',rowCache[\''+cacheKey+'\'])">Edit</button>'
+      +'<button class="del-btn" onclick="delItem(\'songs\',\''+d.id+'\',\'music\')">Delete</button>'
+      +'</div></div>';
+  } else if(type==='teachings'){
+    thumb=d.thumbnail_url?'<img src="'+esc(d.thumbnail_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>':(d.media_type==='video'?'▶':'🎧');
+    title=d.title;
+    sub=(d.topic||'')+(d.media_type?' · '+d.media_type.toUpperCase():'');
+    return '<div class="list-item">'
+      +'<div class="item-thumb">'+thumb+'</div>'
+      +'<div class="item-info"><p>'+esc(title)+'</p><small>'+esc(sub)+'</small></div>'
+      +badge
+      +'<div class="item-actions">'
+      +'<button class="edit-btn" onclick="openModal(\'teachings\',rowCache[\''+cacheKey+'\'])">Edit</button>'
+      +'<button class="del-btn" onclick="delItem(\'teachings\',\''+d.id+'\',\'teachings\')">Delete</button>'
+      +'</div></div>';
   } else if(type==='sermons'){
     thumb=d.thumbnail_url?'<img src="'+esc(d.thumbnail_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:8px"/>':'🎙';
     title=d.title; sub=(d.pastor_name||'')+(d.series_name?' · '+d.series_name:'');
@@ -477,7 +517,7 @@ function buildRow(type,d,cacheKey,rsvpCounts){
     +'</div></div>';
 }
 
-var MT={announcements:'New announcement',events:'New event',articles:'New article',sermons:'New sermon'};
+var MT={announcements:'New announcement',events:'New event',articles:'New article',sermons:'New sermon',songs:'New song',teachings:'New teaching'};
 
 function openModal(type,data){
   CM=type;
@@ -499,6 +539,16 @@ function imgField(url,id){
     +'</div>'
     +(url?'<img src="'+esc(url)+'" class="preview-img" id="'+id+'-preview" style="display:block"/>':'<img class="preview-img" id="'+id+'-preview"/>')
     +'<input type="hidden" id="'+id+'-url" value="'+esc(url||'')+'"/>';
+}
+
+function mediaField(url,id,accept,label){
+  return '<div class="upload-zone" onclick="document.getElementById(\''+id+'-file\').click()">'
+    +'<div style="font-size:28px">🎵</div><p>'+label+'</p><small>MP3 M4A WAV AAC MP4 MOV WEBM</small>'
+    +'<input type="file" id="'+id+'-file" accept="'+accept+'" style="display:none" onchange="upMedia(this,\''+id+'-url\',\''+id+'-st\')"/>'
+    +'<div class="upload-progress" id="'+id+'-prog"><div class="upload-progress-bar" id="'+id+'-bar"></div></div>'
+    +'</div>'
+    +'<input type="hidden" id="'+id+'-url" value="'+esc(url||'')+'"/>'
+    +'<p style="font-size:11px;margin-top:6px;color:'+(url?'var(--t)':'var(--text3)')+'" id="'+id+'-st">'+(url?'Media already uploaded':'No file uploaded yet')+'</p>';
 }
 
 function buildForm(type,d){
@@ -590,6 +640,24 @@ function buildForm(type,d){
       +'<div class="form-row"><label>Thumbnail image</label>'+imgField(d.thumbnail_url,'f-img')+'</div>'
       +sf;
   }
+  if(type==='songs'){
+    return '<div class="form-row"><label>Song title *</label><input id="f-title" value="'+esc(d.title||'')+'"/></div>'
+      +'<div class="form-row"><label>Artist / choir</label><input id="f-artist" value="'+esc(d.artist_name||'')+'"/></div>'
+      +'<div class="form-row"><label>Description</label><textarea id="f-desc">'+esc(d.description||'')+'</textarea></div>'
+      +'<div class="form-row"><label>Song file *</label>'+mediaField(d.file_url,'f-media','audio/*','Upload song file')+'</div>'
+      +'<div class="form-row"><label>Cover image</label>'+imgField(d.cover_image_url,'f-img')+'</div>'
+      +sf;
+  }
+  if(type==='teachings'){
+    var mt=(d.media_type||'audio');
+    return '<div class="form-row"><label>Teaching title *</label><input id="f-title" value="'+esc(d.title||'')+'"/></div>'
+      +'<div class="form-row"><label>Topic (e.g. Faith in the Lord Jesus Christ)</label><input id="f-topic" value="'+esc(d.topic||'')+'"/></div>'
+      +'<div class="form-row"><label>Description</label><textarea id="f-desc">'+esc(d.description||'')+'</textarea></div>'
+      +'<div class="form-row"><label>Media type</label><select id="f-mtype"><option value="audio" '+(mt==='audio'?'selected':'')+'>Audio (MP3)</option><option value="video" '+(mt==='video'?'selected':'')+'>Video (MP4)</option></select></div>'
+      +'<div class="form-row"><label>Teaching media *</label>'+mediaField(d.media_url,'f-media','audio/*,video/*','Upload teaching media')+'</div>'
+      +'<div class="form-row"><label>Thumbnail image</label>'+imgField(d.thumbnail_url,'f-img')+'</div>'
+      +sf;
+  }
   return '';
 }
 
@@ -628,6 +696,24 @@ async function upAudio(input){
   var url=await upFile(f,'sermon-audio','f-audio-prog','f-audio-bar');
   if(url){ document.getElementById('f-audio-url').value=url; st.textContent='Uploaded: '+f.name; st.style.color='var(--t)'; }
 }
+async function upMedia(input,urlId,statusId){
+  var f=input.files[0]; if(!f)return;
+  var st=document.getElementById(statusId); st.textContent='Uploading...';
+  var bucket=CM==='teachings'?'teachings-media':'songs-media';
+  var url=await upFile(f,bucket,'f-media-prog','f-media-bar');
+  if(url){
+    document.getElementById(urlId).value=url;
+    st.textContent='Uploaded: '+f.name;
+    st.style.color='var(--t)';
+    if(CM==='teachings'){
+      var mt=document.getElementById('f-mtype');
+      if(mt&&f.type){
+        if(f.type.indexOf('video/')===0) mt.value='video';
+        else if(f.type.indexOf('audio/')===0) mt.value='audio';
+      }
+    }
+  }
+}
 async function upFile(file,bucket,progId,barId){
   var prog=document.getElementById(progId), bar=document.getElementById(barId);
   prog.style.display='block'; bar.style.width='40%';
@@ -641,7 +727,7 @@ async function upFile(file,bucket,progId,barId){
   return SB.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 }
 function getBucket(type){
-  var map={announcements:'announcement-images',events:'event-posters',articles:'article-covers',sermons:'sermon-thumbnails'};
+  var map={announcements:'announcement-images',events:'event-posters',articles:'article-covers',sermons:'sermon-thumbnails',songs:'song-covers',teachings:'teaching-thumbnails'};
   return map[type]||'announcement-images';
 }
 
@@ -732,6 +818,16 @@ async function submitForm(){
       if(!gv('f-pastor')) throw new Error('Pastor name is required');
       payload={title:gv('f-title'),subtitle:gv('f-subtitle')||null,pastor_name:gv('f-pastor'),series_name:gv('f-series')||null,scripture_reference:gv('f-scripture')||null,description:gv('f-desc')||null,audio_url:gv('f-audio-url')||null,thumbnail_url:gv('f-img-url')||null,is_published:pub};
       if(!EID) payload.created_by=CU.id;
+    } else if(CM==='songs'){
+      if(!gv('f-title')) throw new Error('Title is required');
+      if(!gv('f-media-url')) throw new Error('Please upload a song file');
+      payload={title:gv('f-title'),artist_name:gv('f-artist')||null,description:gv('f-desc')||null,file_url:gv('f-media-url'),cover_image_url:gv('f-img-url')||null,is_published:pub};
+      if(!EID) payload.created_by=CU.id;
+    } else if(CM==='teachings'){
+      if(!gv('f-title')) throw new Error('Title is required');
+      if(!gv('f-media-url')) throw new Error('Please upload teaching media');
+      payload={title:gv('f-title'),topic:gv('f-topic')||null,description:gv('f-desc')||null,media_type:gv('f-mtype')||'audio',media_url:gv('f-media-url'),thumbnail_url:gv('f-img-url')||null,is_published:pub};
+      if(!EID) payload.created_by=CU.id;
     }
     var tbl=CM;
     var res;
@@ -752,15 +848,19 @@ async function submitForm(){
     }
 
     closeModal();
-    if(savedType) await loadList(savedType);
+    if(savedType){
+      var listType=(savedType==='songs')?'music':savedType;
+      await loadList(listType);
+    }
     loadStats();
 
-    if(activeBeforeSave==='dashboard'&&savedType&&(savedType==='announcements'||savedType==='events'||savedType==='articles')){
+    if(activeBeforeSave==='dashboard'&&savedType&&(savedType==='announcements'||savedType==='events'||savedType==='articles'||savedType==='songs'||savedType==='teachings')){
       var navButtons=document.querySelectorAll('.nav-item');
       for(var i=0;i<navButtons.length;i++){
         var onclick=String(navButtons[i].getAttribute('onclick')||'');
-        if(onclick.indexOf("showPage('"+savedType+"'")!==-1){
-          showPage(savedType,navButtons[i]);
+        var target=(savedType==='songs')?'music':savedType;
+        if(onclick.indexOf("showPage('"+target+"'")!==-1){
+          showPage(target,navButtons[i]);
           break;
         }
       }

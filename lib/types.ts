@@ -23,6 +23,28 @@ export interface Sermon {
   thumbnail_url?: string; duration_seconds?: number; series_name?: string;
   scripture_reference?: string; is_published: boolean; created_at: string;
 }
+export interface Song {
+  id: string;
+  title: string;
+  artist_name?: string;
+  description?: string;
+  file_url?: string;
+  cover_image_url?: string;
+  duration_seconds?: number;
+  is_published: boolean;
+  created_at: string;
+}
+export interface Teaching {
+  id: string;
+  title: string;
+  topic?: string;
+  description?: string;
+  media_url?: string;
+  media_type?: 'audio' | 'video';
+  thumbnail_url?: string;
+  is_published: boolean;
+  created_at: string;
+}
 export interface Post {
   id: string; user_id: string; content: string; image_url?: string;
   likes_count: number; comments_count?: number; is_hidden: boolean; created_at: string; updated_at?: string;

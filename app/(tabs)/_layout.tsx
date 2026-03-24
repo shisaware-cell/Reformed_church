@@ -6,7 +6,9 @@ const ICONS: Record<string, { active: string; inactive: string }> = {
   index:      { active: '⌂',  inactive: '⌂'  },
   community:  { active: '👥',  inactive: '👥'  },
   notes:      { active: '✏',  inactive: '✎'  },
-  scriptures: { active: '✞',  inactive: '✞'  },
+  bible:      { active: '✞',  inactive: '✞'  },
+  music:      { active: '♪',  inactive: '♫'  },
+  teachings:  { active: '▶',  inactive: '▶'  },
   profile:    { active: '👤',  inactive: '👤'  },
 };
 
@@ -33,7 +35,9 @@ export default function TabsLayout() {
       <Tabs.Screen name="index"      options={{ title: 'Home',       tabBarIcon: ({ focused }) => <TabIcon name="index"      focused={focused} label="Home"       /> }} />
       <Tabs.Screen name="community"  options={{ title: 'Community',  tabBarIcon: ({ focused }) => <TabIcon name="community"  focused={focused} label="Community"  /> }} />
       <Tabs.Screen name="notes"      options={{ title: 'Notes',      tabBarIcon: ({ focused }) => <TabIcon name="notes"      focused={focused} label="Notes"      /> }} />
-      <Tabs.Screen name="scriptures" options={{ title: 'Scripture',  tabBarIcon: ({ focused }) => <TabIcon name="scriptures" focused={focused} label="Scripture"  /> }} />
+      <Tabs.Screen name="bible"      options={{ title: 'Bible',      tabBarIcon: ({ focused }) => <TabIcon name="bible"      focused={focused} label="Bible"      /> }} />
+      <Tabs.Screen name="music"      options={{ title: 'Music',      tabBarIcon: ({ focused }) => <TabIcon name="music"      focused={focused} label="Music"      /> }} />
+      <Tabs.Screen name="teachings"  options={{ title: 'Teachings',  tabBarIcon: ({ focused }) => <TabIcon name="teachings"  focused={focused} label="Teachings"  /> }} />
       <Tabs.Screen name="profile"    options={{ title: 'Profile',    tabBarIcon: ({ focused }) => <TabIcon name="profile"    focused={focused} label="Profile"    /> }} />
     </Tabs>
   );

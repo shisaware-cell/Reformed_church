@@ -256,9 +256,30 @@
     var downloadStatus = document.getElementById('download-status');
     var logo = document.getElementById('church-logo');
     var downloadClient = null;
+    var apkUrl = null;
+
+    function resolveApkUrl() {
+      var configuredPath = config.apkPath || './reformed-church.apk';
+      try {
+        return new URL(configuredPath, window.location.href).toString();
+      } catch (e) {
+        return configuredPath;
+      }
+    }
+
+    function isAndroid() {
+      return /Android/i.test(navigator.userAgent || '');
+    }
 
     if (config.iconPath && logo) logo.src = config.iconPath;
-    if (config.apkPath && downloadButton) downloadButton.href = config.apkPath;
+    apkUrl = resolveApkUrl();
+    if (downloadButton) {
+      downloadButton.href = apkUrl;
+      if (isAndroid()) {
+        // Some Android browsers ignore or mishandle the download attribute for APKs.
+        downloadButton.removeAttribute('download');
+      }
+    }
 
     if (config.supabaseUrl && config.supabaseAnonKey) {
       downloadClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
@@ -285,9 +306,28 @@
     }
 
     if (downloadButton) {
-      downloadButton.addEventListener('click', function () {
-        downloadStatus.textContent = 'Your download should begin shortly.';
+      downloadButton.addEventListener('click', async function (event) {
+        var targetUrl = apkUrl || downloadButton.href;
+        downloadStatus.textContent = 'Preparing download...';
+
+        try {
+          var headResponse = await fetch(targetUrl, { method: 'HEAD', cache: 'no-store' });
+          if (!headResponse.ok) {
+            downloadStatus.textContent = 'APK file is unavailable right now. Please try again shortly.';
+            event.preventDefault();
+            return;
+          }
+        } catch (e) {
+          // If HEAD fails (for example due to browser restrictions), continue with direct navigation.
+        }
+
         trackDownload();
+        downloadStatus.textContent = 'Download is starting. Check your notifications/downloads folder.';
+
+        if (isAndroid()) {
+          event.preventDefault();
+          window.location.assign(targetUrl);
+        }
       });
     }
   </script>

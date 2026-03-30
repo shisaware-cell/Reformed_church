@@ -75,14 +75,12 @@ jobs:
             Automated APK build from commit ${{ github.sha }}.
 
       - name: Deploy download site to Netlify (optional)
-        if: ${{ secrets.NETLIFY_AUTH_TOKEN != '' && secrets.NETLIFY_SITE_ID != '' }}
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then
+            echo "NETLIFY_AUTH_TOKEN or NETLIFY_SITE_ID not set. APK was built and released, but Netlify deploy was skipped."
+            exit 0
+          fi
           npx netlify deploy --prod --dir=prototypes --site "$NETLIFY_SITE_ID" --message "APK deploy from GitHub Actions run $GITHUB_RUN_ID"
-
-      - name: Netlify deploy skipped note
-        if: ${{ secrets.NETLIFY_AUTH_TOKEN == '' || secrets.NETLIFY_SITE_ID == '' }}
-        run: |
-          echo "NETLIFY_AUTH_TOKEN or NETLIFY_SITE_ID not set. APK was built and released, but Netlify deploy was skipped."

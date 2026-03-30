@@ -46,6 +46,34 @@ jobs:
       - name: Generate native Android project
         run: npx expo prebuild --platform android --non-interactive
 
+      - name: Force bundle in debug APK
+        run: |
+          python3 - <<'PY'
+from pathlib import Path
+
+path = Path('android/app/build.gradle')
+text = path.read_text()
+
+marker = 'react {'
+idx = text.find(marker)
+if idx == -1:
+    raise SystemExit('Could not find react block in android/app/build.gradle')
+
+insert = "\n    // CI build must run without Metro, so always package JS bundle.\n    debuggableVariants = []\n"
+
+open_brace = text.find('{', idx)
+if open_brace == -1:
+    raise SystemExit('Malformed react block in android/app/build.gradle')
+
+line_end = text.find('\n', open_brace)
+if line_end == -1:
+    line_end = open_brace
+
+if 'debuggableVariants = []' not in text:
+    text = text[:line_end + 1] + insert + text[line_end + 1:]
+    path.write_text(text)
+PY
+
       - name: Build debug APK
         run: |
           cd android

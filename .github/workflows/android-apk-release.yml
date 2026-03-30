@@ -31,32 +31,30 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup Expo and EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Generate native Android project
+        run: npx expo prebuild --platform android --non-interactive
 
-      - name: Build APK with EAS
-        env:
-          BUILD_PROFILE: ${{ github.event.inputs.profile || 'preview' }}
+      - name: Build debug APK
         run: |
-          eas build --platform android --profile "$BUILD_PROFILE" --non-interactive --wait --json > eas-build-result.json
-          cat eas-build-result.json
+          cd android
+          ./gradlew assembleDebug
 
-      - name: Download build artifact
+      - name: Collect APK
         run: |
-          BUILD_URL=$(node -e "const fs=require('fs'); const data=JSON.parse(fs.readFileSync('eas-build-result.json','utf8')); const build=Array.isArray(data)?data[0]:data; const url=build?.artifacts?.buildUrl || ''; process.stdout.write(url);")
-          if [ -z "$BUILD_URL" ]; then
-            echo "Could not find artifacts.buildUrl in EAS result"
-            exit 1
-          fi
-          echo "Build URL: $BUILD_URL"
           mkdir -p prototypes
-          curl -L "$BUILD_URL" -o prototypes/reformed-church.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk prototypes/reformed-church.apk
           ls -lh prototypes/reformed-church.apk
 
       - name: Create release tag metadata
